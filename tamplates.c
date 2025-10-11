@@ -17,4 +17,10 @@ void swap(int* a, int* b) {
     *b = tmp;
 }
 
-
+int abs(int number) {
+    if (number < 0) {
+        return -number;
+    } else {
+        return number;
+    }
+}
