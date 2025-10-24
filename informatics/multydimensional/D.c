@@ -3,30 +3,34 @@
 
 
 int find_max_area(int heights[], int M) {
-    int stack[5000]; 
+    int stack[5000];
     int top = -1;
-    int area;
     int max_area = 0;
-    int i = 0;
-    int h;
-    int height_rect;
-    int width_rect;
-    while (i <= M) {
-        h = (i == M) ? 0 : heights[i]; 
-        if (top != -1 && h < heights[stack[top]]) {
-            height_rect = heights[stack[top]];
+    int width;
+    int current_height;
+    int height_index;
+    int area;
+    int i;
+    for (i = 0; i <= M; i++) {
+        if (i == M) {
+            current_height = 0;
+        } else {
+            current_height = heights[i];
+        }
+        while (top >= 0 && current_height < heights[stack[top]]) {
+            height_index = top;
             top--;
-            width_rect = (top == -1) ? i : (i - stack[top] - 1);
-            area = height_rect * width_rect;
+            if (top == -1) {
+                width = i;
+            } else {
+                width = i - stack[top] - 1;
+            }
+            area = heights[stack[height_index]] * width;
             if (area > max_area) {
                 max_area = area;
             }
         }
-        else {
-            stack[top + 1] = i;
-            top++;
-            i++;
-        }
+        stack[++top] = i;
     }
     return max_area;
 }

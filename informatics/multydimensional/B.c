@@ -31,10 +31,11 @@ int on_canvas(long x, long y, long W, long H) {
 void quick_sort(long array[][2], long size){
     long down = 0;
     long up = size - 1;
+    long pivot[2] = {array[size / 2][0], array[size / 2][1]};
     if (size > 1){
         while (down <= up){
-            while (is_smaller(array[down], array[size / 2])) down++;
-            while (is_smaller(array[size / 2], array[up])) up--;
+            while (is_smaller(array[down], pivot)) down++;
+            while (is_smaller(pivot, array[up])) up--;
             if (down <= up){
                 swap(array[down], array[up]);
                 down++;

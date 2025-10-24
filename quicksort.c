@@ -5,25 +5,21 @@ void swap(long long *a, long long *b) {
 }
 
 
-int partition(long long array[], long long low, long long high) {
-    long long pivot = array[high];
-    long long i = (low - 1);
-    long long j;
-    for (j = low; j < high; j++) {
-        if (array[j] <= pivot) {
-            i++;
-            swap(&array[i], &array[j]);
+void quick_sort(long array[][2], long size){
+    long down = 0;
+    long up = size - 1;
+    long pivot[2] = {array[size / 2][0], array[size / 2][1]};
+    if (size > 1){
+        while (down <= up){
+            while (is_smaller(array[down], pivot)) down++;
+            while (is_smaller(pivot, array[up])) up--;
+            if (down <= up){
+                swap(array[down], array[up]);
+                down++;
+                up--;
+            }
         }
-    }
-    swap(&array[i + 1], &array[high]);
-    return (i + 1);
-}
-
-
-void quick_sort(long long array[], long long low, long long high) {
-    if (low < high) {
-        long long pi = partition(array, low, high);
-        quick_sort(array, low, pi - 1);
-        quick_sort(array, pi + 1, high);
+        quick_sort(array, up + 1);
+        quick_sort(array + down, size - down);
     }
 }
