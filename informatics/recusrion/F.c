@@ -2,13 +2,13 @@
 #include <stdlib.h>
 
 
-void fill_square(int start, int stop, int** array) {
-    int len = stop - start;
+void fill_spiral(short start, short stop, short** array) {
+    short len = stop - start;
     if (start > 1 && len > 0) {
         array[start][start - 1] = 1;
     }
     if (len > 2) {
-        int i;
+        short i;
         for (i = start; i < stop; i++) {
             array[start][i] = 1;
         }
@@ -23,7 +23,7 @@ void fill_square(int start, int stop, int** array) {
         }
         if (start > 1) {
         }
-        fill_square(start + 2, stop - 2, array);
+        fill_spiral(start + 2, stop - 2, array);
     } else if (len == 2) {
         array[start][start] = 1;
         array[start][start + 1] = 1;
@@ -34,8 +34,8 @@ void fill_square(int start, int stop, int** array) {
 }
 
 
-void print_array(int N, int** array) {
-    int i, j;
+void prshort_array(short N, short** array) {
+    short i, j;
     for (i = 0; i < N; i++) {
         for (j = 0; j < N; j++) {
             printf("%d", array[i][j]);  
@@ -47,26 +47,15 @@ void print_array(int N, int** array) {
 }
 
 
-void create_array(int N, int** array) {
-    int i, j;
+short main() {
+    short N;
+    scanf("%hd", &N);
+    short** array = (short**)calloc(N, sizeof(short*));
+    short i;
     for (i = 0; i < N; i++) {
-        for (j = 0; j < N; j++) {
-            array[i][j] = 0;
-        }
+        array[i] = (short*)calloc(N, sizeof(short));
     }
-}
-
-
-int main() {
-    int N;
-    scanf("%d", &N);
-    int** array = (int**)calloc(N, sizeof(int*));
-    int i;
-    for (i = 0; i < N; i++) {
-        array[i] = (int*)calloc(N, sizeof(int));
-    }
-    create_array(N, array);
-    fill_square(0, N, array);
-    print_array(N, array);
+    fill_spiral(0, N, array);
+    prshort_array(N, array);
     return 0;
 }
