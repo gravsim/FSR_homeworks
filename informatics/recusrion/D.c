@@ -56,16 +56,6 @@ int extract_power(int* i, char* array) {
 }
 
 
-void print_array(int N, int* array) {
-    int i;
-    printf("\nArray: ");
-    for (i = 0; i < N; i++) {
-        printf("%d ", array[i]);
-    }
-    printf("\n");
-}
-
-
 void read_polynomial(char* polynomial, int* multipliers) {
     int i = 0;
     int power = 1;
@@ -73,11 +63,8 @@ void read_polynomial(char* polynomial, int* multipliers) {
     while (polynomial[i] != '\0') {
         multiplier = extract_multiplier(&i, polynomial);
         power = extract_power(&i, polynomial);
-        // printf("\nMultiplier: %d", multiplier);
-        // printf(", power: %d ", power);
         multipliers[power] = multiplier;
     }
-    // printf("\nArray readed.\n\n");
 }
 
 
@@ -102,6 +89,9 @@ void print_polynomial(int* polynomial) {
             if (polynomial[i] != 1 || i == 0) {
                 if (polynomial[i] == -1) {
                     printf("-");
+                    if (i == 0) {
+                        printf("1");
+                    }
                 } else {
                     printf("%d", polynomial[i]);
                 }
@@ -129,11 +119,8 @@ int main() {
     int multipliers2[MAX_POWER] = {0};
     read_polynomial(polynomial1, multipliers1);
     read_polynomial(polynomial2, multipliers2);
-    // print_array(MAX_POWER, multipliers1);
-    // print_array(MAX_POWER, multipliers2);
     int result[MAX_POWER * 2] = {0};
     get_multiplication(result, multipliers1, multipliers2);
-    // print_array(MAX_POWER * 2, result);
     print_polynomial(result);
     return 0;
 }
