@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_POWER 11
 
 
 int char2int(char number) {
@@ -18,11 +19,12 @@ int extract_multiplier(int* i, char* array) {
     int sign = 1;
     if (array[*i] == '-') {
         sign = -1;
+        (*i)++;
+    } else if (array[*i] == '+') {
+        (*i)++;
     }
-    (*i)++;
     if (array[*i] == 'x') {
-        multiplier = 1;
-        return sign * multiplier;
+        return sign;
     }
     while (is_number(array[*i])) {
         multiplier *= 10;
@@ -47,7 +49,7 @@ int extract_power(int* i, char* array) {
         } else {
             power = 1;
         }
-    } else if (array[*i] == '\0') {
+    } else {
         power = 0;
     }
     return power;
@@ -68,7 +70,7 @@ void read_polynomial(char* polynomial, int* multipliers) {
     int i = 0;
     int power = 1;
     int multiplier;
-    while (polynomial[i] != '\0' && power != 0) {
+    while (polynomial[i] != '\0') {
         multiplier = extract_multiplier(&i, polynomial);
         power = extract_power(&i, polynomial);
         // printf("\nMultiplier: %d", multiplier);
@@ -80,14 +82,10 @@ void read_polynomial(char* polynomial, int* multipliers) {
 
 
 void get_multiplication(int* result, int* multipliers1, int* multipliers2) {
-    int i, j, k;
-    for (i = 0; i < 11; i++) {
-        for (j = 0; j < 11; j++) {
-            for (k = 0; k < 11; k++) {
-                if (j + k == i) {
-                    result[i] += multipliers1[j] * multipliers2[k];
-                }
-            }
+    int i, j;
+    for (i = 0; i < MAX_POWER; i++) {
+        for (j = 0; j < MAX_POWER; j++) {
+            result[i + j] += multipliers1[i] * multipliers2[j];
         }
     }
 }
@@ -96,7 +94,7 @@ void get_multiplication(int* result, int* multipliers1, int* multipliers2) {
 void print_polynomial(int* polynomial) {
     int i;
     int counter = 0;
-    for (i = 10; i >= 0; i--) {
+    for (i = 2 * MAX_POWER - 2; i >= 0; i--) {
         if (polynomial[i] != 0) {
             if (counter > 0 && polynomial[i] > 0) {
                 printf("+");
@@ -116,6 +114,9 @@ void print_polynomial(int* polynomial) {
             counter++;
         }
     }
+    if (counter == 0) {
+        printf("0");
+    }
 }
 
 
@@ -124,15 +125,15 @@ int main() {
     char polynomial2[100];
     scanf("%s", polynomial1);
     scanf("%s", polynomial2);
-    int multipliers1[11] = {0};
-    int multipliers2[11] = {0};
+    int multipliers1[MAX_POWER] = {0};
+    int multipliers2[MAX_POWER] = {0};
     read_polynomial(polynomial1, multipliers1);
     read_polynomial(polynomial2, multipliers2);
-    print_array(11, multipliers1);
-    print_array(11, multipliers2);
-    int result[11] = {0};
+    // print_array(MAX_POWER, multipliers1);
+    // print_array(MAX_POWER, multipliers2);
+    int result[MAX_POWER * 2] = {0};
     get_multiplication(result, multipliers1, multipliers2);
-    // print_array(11, result);
+    // print_array(MAX_POWER * 2, result);
     print_polynomial(result);
     return 0;
 }
