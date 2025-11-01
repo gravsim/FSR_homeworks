@@ -16,25 +16,30 @@ int put_on_sides(int side,
                 int N,
                 int i,
                 int* weights,
-                int* left_scales,
-                int* right_scales,
-                int left_last,
-                int right_last) {
-    
-    if (!(left_last < N && right_last < N)) {
-        return 0;
-    }
-    if (get_sum(N, left_scales) == get_sum(N, right_scales)) {
+                int left_sum,
+                int right_sum) {
+    if (left_sum == right_sum) {
         return 1;
     }
-    if (side == 0) {
-        left_scales[left_last] = weights[i];
-    } else {
-        right_scales[right_last] = weights[i];  
+    if (i >= N) {
+        printf("ABOBA ");
+        return 0;
     }
+    
     i++;
-    return put_on_sides(0, N, i, weights, left_scales, right_scales, ++left_last, right_last)
-            || put_on_sides(1, N, i, weights, left_scales, right_scales, left_last, ++right_last);
+    switch (side) {
+        case 0:
+            left_sum += weights[i];
+        case 1:
+            right_sum += weights[i];  
+    }
+
+
+    if (put_on_sides(0, N, i, weights, left_sum, right_sum)
+    || put_on_sides(1, N, i, weights, left_sum, right_sum)) {
+        printf("%i", weights[i]);
+        return 1;
+    }
 }
 
 
@@ -54,25 +59,21 @@ int main() {
     int K_weight;
     int N;
     scanf("%i %i", &K_weight, &N);
-
+    // printf("%i    ", N);
     int* weights = (int*)calloc(N, sizeof(int));
-    int* left_scales = (int*)calloc(N, sizeof(int));
-    int* right_scales = (int*)calloc(N, sizeof(int));
-    int i, j;
+    int left_sum = 0;
+    int right_sum = 0;
+    int i;
     for (i = 0; i < N; i++) {
-        scanf("%i", weights[i]);
+        scanf("%i", &weights[i]);
     }
 
-    left_scales[0] = K_weight;
-    if (put_on_sides(0, N, i, weights, left_scales, right_scales, 1, 0) ||
-    put_on_sides(1, N, i, weights, left_scales, right_scales, 1, 0)) {
-        print_scales(N, left_scales);
-        print_scales(N, right_scales);
+    left_sum += K_weight;
+    if (put_on_sides(0, N, 0, weights, left_sum, right_sum) ||
+    put_on_sides(1, N, 0, weights, left_sum, right_sum)) {
     } else {
         printf("-1");
     }
     free(weights);
-    free(left_scales);
-    free(right_scales);
     return 0;
 }
