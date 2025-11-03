@@ -1,16 +1,17 @@
 #include <stdio.h>
 
-void print_number() {
+int print_number(void) {
     int number;
     scanf("%d", &number);
     if (number) {
         print_number();
     }
     printf("%d\n", number);
+    return 0;
 }
 
 
-int main() {
+int main(void) {
     print_number();
     return 0;
 }

@@ -28,7 +28,7 @@ void separate(int remaining_sum, int max_value, int len, int* array) {
 }
 
 
-int main() {
+int main(void) {
     int N;
     scanf("%d", &N);
     int* array = (int*)calloc(N, sizeof(int));

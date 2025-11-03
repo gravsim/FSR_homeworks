@@ -47,7 +47,7 @@ void prshort_array(short N, short** array) {
 }
 
 
-short main() {
+short main(void) {
     short N;
     scanf("%hd", &N);
     short** array = (short**)calloc(N, sizeof(short*));

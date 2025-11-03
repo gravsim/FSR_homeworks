@@ -11,7 +11,7 @@ double power(double a, int n) {
 }
 
 
-int main() {
+int main(void) {
     double a;
     int n;
     scanf("%lf %d", &a, &n);

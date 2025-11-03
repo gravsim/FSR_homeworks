@@ -110,7 +110,7 @@ void print_polynomial(int* polynomial) {
 }
 
 
-int main() {
+int main(void) {
     char polynomial1[100];
     char polynomial2[100];
     scanf("%s", polynomial1);

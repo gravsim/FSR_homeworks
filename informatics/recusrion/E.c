@@ -16,7 +16,7 @@ int find_area(int N, int x, int y, char** array) {
 }
 
 
-int main() {
+int main(void) {
     int N;
     scanf("%d", &N);
     char** array = (char**)calloc(N, sizeof(char*));
