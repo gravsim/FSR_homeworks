@@ -2,14 +2,14 @@
 #include <stdlib.h>
 
 
-int is_smaller(long a[2], long b[2]) {
+int is_smaller(long* a, long* b) {
     if (a[0] != b[0]) return a[0] < b[0];
     if (a[1] != b[1]) return a[1] < b[1];
     return 0;
 }
 
 
-void swap(long a[2], long b[2]) {
+void swap(long* a, long* b) {
     long tmp = a[0];
     a[0] = b[0];
     b[0] = tmp;
@@ -28,7 +28,7 @@ int on_canvas(long x, long y, long W, long H) {
 }
 
 
-void quick_sort(long array[][2], long size){
+void quick_sort(long** array, long size){
     long down = 0;
     long up = size - 1;
     long pivot[2] = {array[size / 2][0], array[size / 2][1]};
@@ -48,7 +48,7 @@ void quick_sort(long array[][2], long size){
 }
 
 
-void check(long x, long y, long W, long H, long colored[][2], long *k) {
+void check(long x, long y, long W, long H, long** colored, long *k) {
     if (on_canvas(x, y, W, H)) {
         colored[*k][0] = x;
         colored[*k][1] = y;
@@ -57,20 +57,22 @@ void check(long x, long y, long W, long H, long colored[][2], long *k) {
 }
 
 
-int main() {
+int main(void) {
     long W;
     long H;
     long N;
+    long i, j;
+    long x, y;
+    long k = 0;
     scanf("%ld %ld %ld", &W, &H, &N);
     if (N < W * H / 5) {
         printf("No");
         return 0;
     }
-
-    long(*colored)[2] = malloc(sizeof(long[5 * N][2]));
-    long i, j, k;
-    long x, y;
-    k = 0;
+    long** colored = (long**)calloc(N * 5, sizeof(long*));
+    for (i = 0; i < N * 5; i++) {
+        colored[i] = (long*)calloc(2, sizeof(long));
+    }
     for (i = 0; i < N; i++) {
         scanf("%ld %ld", &x, &y);
         check(x, y, W, H, colored, &k);
@@ -79,7 +81,6 @@ int main() {
         check(x, y + 1, W, H, colored, &k);
         check(x, y - 1, W, H, colored, &k);
     }
-
     quick_sort(colored, k);
     long unique = 0;
     for (long i = 0; i < k; i++) {
@@ -87,11 +88,13 @@ int main() {
             unique++;
         }  
     }
-
     if (unique >= H * W) {
         printf("Yes");
     } else {
         printf("No");
+    }
+    for (i = 0; i < 5 * N; i++) {
+        free(colored[i]);
     }
     free(colored);
     return 0;

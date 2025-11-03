@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <stdlib.h>
 
 void put(int* spase, int value) {
     *spase = value;
@@ -55,7 +55,7 @@ void print_array(int* iterable, int* len, int* array) {
 }
 
 
-int main() {
+int main(void) {
     int N;
     my_scanf(&N);
     int* array = (int*)calloc(N, sizeof(int));
