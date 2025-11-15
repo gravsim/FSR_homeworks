@@ -18,11 +18,6 @@ void my_printf(long* variable) {
 }
 
 
-void print_zero(void) {
-    printf("0");
-}
-
-
 void increment(long* variable) {
     (*variable)++;
 }
