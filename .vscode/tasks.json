@@ -1,16 +1,25 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "type": "shell",
-            "command": "make",
-            "args": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": []
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Make Current File",
+      "type": "shell",
+      "command": "C:/Program Files/Git/bin/bash.exe",
+      "args": [
+        "-lc",
+        "make current FILE=\"${fileDirname}/${fileBasename}\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "shell": {
+          "executable": "C:/Program Files/Git/bin/bash.exe",
+          "args": ["-lc"]
         }
-    ]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
 }
