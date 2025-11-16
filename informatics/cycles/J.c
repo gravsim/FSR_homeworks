@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-int main() {
+int main(void) {
     int number, iteration;
     scanf("%d", &number);
     int current = 1;

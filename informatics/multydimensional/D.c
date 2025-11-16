@@ -36,7 +36,7 @@ int find_max_area(int heights[], int M) {
 }
 
 
-int main() {
+int main(void) {
     int N;
     int M;
     int number;

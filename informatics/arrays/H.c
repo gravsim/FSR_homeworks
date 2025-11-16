@@ -65,7 +65,7 @@ void contain(long long array1[], long long array2[], long long size1, long long 
 }
 
 
-int main() {
+int main(void) {
     long long size1;
     long long size2;
     long long array1[100000];

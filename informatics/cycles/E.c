@@ -1,7 +1,8 @@
 #include <stdio.h>
+#include <math.h>
 
 
-int main() {
+int main(void) {
     double number;
     scanf("%lf", &number);
     int integral_part = (int)number;
@@ -23,7 +24,7 @@ int main() {
     }
     printf(".");
     iteration = 0;
-    while (iteration <= 33 && double_part - (double)((int)double_part) != 0) {
+    while (iteration <= 33 && double_part - fabs((double)(int)double_part) > 1e-9) {
         double_part = (double_part - (double)((int)double_part)) * 2;
         printf("%d", (int)double_part);
         iteration++;

@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-int main() {
+int main(void) {
     int number1, number2;
     int answer = 0;
     scanf("%d", &number1);

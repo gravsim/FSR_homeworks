@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-int main() {
+int main(void) {
     int sum = 0;
     int iteration;
     int number1;

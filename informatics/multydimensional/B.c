@@ -57,7 +57,7 @@ void check(long x, long y, long W, long H, long colored[][2], long *k) {
 }
 
 
-int main() {
+int main(void) {
     long W;
     long H;
     long N;
@@ -82,7 +82,7 @@ int main() {
 
     quick_sort(colored, k);
     long unique = 0;
-    for (long i = 0; i < k; i++) {
+    for (i = 0; i < k; i++) {
         if (i == 0 || colored[i][0] != colored[i - 1][0] || colored[i][1] != colored[i - 1][1]) {
             unique++;
         }  

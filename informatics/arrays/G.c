@@ -16,7 +16,7 @@ int compare(const void* a, const void* b) {
 }
 
 
-int main() {
+int main(void) {
     int size;
     int points[100000];
     read_array(&size, points);

@@ -24,7 +24,7 @@ int check_digits(int number) {
     return 0;
 }
 
-int main() {
+int main(void) {
     int A, B;
     int number;
     scanf("%d %d", &A, &B);

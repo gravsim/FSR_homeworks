@@ -8,7 +8,7 @@ void check(int x, int y, int N, int M, int array[20][20]) {
 }
 
 
-int main() {
+int main(void) {
     int N;
     int M;
     int K;

@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-int main() {
+int main(void) {
     int size;
     int array[20][20];
     scanf("%d", &size);

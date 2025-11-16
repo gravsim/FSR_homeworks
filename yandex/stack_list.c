@@ -75,6 +75,7 @@ int check_Stack(struct Stack* stack) {
 
 int main(void) {
     int command;
+    int true_false;
     char value;
     struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
     stack->beg = NULL;
@@ -97,7 +98,6 @@ int main(void) {
                 }
                 break;
             case 4:
-                int true_false;
                 is_empty(stack, &true_false);
                 printf("%i\n", true_false);
                 break;

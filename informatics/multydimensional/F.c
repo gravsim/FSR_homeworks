@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-int main() {
+int main(void) {
     int N, M, K;
     scanf("%d %d", &N, &M);
     double perfumes[100][100] = {0};

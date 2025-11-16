@@ -10,7 +10,7 @@ void read_array(int *size, int array[]) {
 }
 
 
-int main() {
+int main(void) {
     int size;
     int wagons[1000];
     read_array(&size, wagons);

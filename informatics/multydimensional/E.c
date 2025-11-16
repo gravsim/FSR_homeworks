@@ -10,7 +10,7 @@ int abs(int number) {
 }
 
 
-int main() {
+int main(void) {
     char array[BOARD_LEN][BOARD_LEN];
     int attacked[BOARD_LEN][BOARD_LEN] = {0};
     int i, j, k, l;

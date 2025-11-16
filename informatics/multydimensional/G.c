@@ -13,7 +13,7 @@ int min(int a, int b, int c) {
 }
 
 
-int main() {
+int main(void) {
     int n;
     int m;
     int number;

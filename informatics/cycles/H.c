@@ -11,7 +11,7 @@ int get_digits_product(int number) {
 }
 
 
-int main() {
+int main(void) {
     int number;
     for (number = 10; number < 100; number++) {
         if (number == 2 * get_digits_product(number)) {

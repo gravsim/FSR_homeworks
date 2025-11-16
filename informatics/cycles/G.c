@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-int main() {
+int main(void) {
     int A, B, buffer, iteration;
     scanf("%d %d", &A, &B);
     if (A < B) {

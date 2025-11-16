@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-int main() {
+int main(void) {
     int N;
     scanf("%d", &N);
     int colors[1000];
