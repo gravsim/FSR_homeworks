@@ -114,7 +114,7 @@ int main(void) {
     Deque* deque = malloc(sizeof(Deque));
     deque->front = 0;
     deque->back = 0;
-    deque->capacity = 10000000;
+    deque->capacity = 100000000;
     deque->values = (int*)calloc(deque->capacity, sizeof(int));
     do {
         scanf("%i", &command);
@@ -160,7 +160,7 @@ int main(void) {
             default:
                 break;
         }
-        // print_deque(deque);
+        // print_deque(deque) ;
     } while (command != 0);
     free(deque->values);
     free(deque);
