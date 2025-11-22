@@ -9,8 +9,8 @@ typedef struct Node {
 } Node;
 
 
-int search(Node* root_pp, int value) {
-    Node* current = root_pp;
+int search(Node* root_p, int value) {
+    Node* current = root_p;
     while (current && current->value != value) {
         if (current->value > value) {
             current = current->right;
@@ -25,8 +25,8 @@ int search(Node* root_pp, int value) {
 }
 
 
-Node* find_leaf(Node** root_pp, int value) {
-    Node* current = *root_pp;
+Node* find_leaf(Node* root_p, int value) {
+    Node* current = root_p;
     while (current) {
         if (current->value > value) {
             if (!current->right) {
@@ -44,19 +44,16 @@ Node* find_leaf(Node** root_pp, int value) {
 }
 
 
-int find_deleting(Node** root_pp, int value, Node** found) {
-    *found = *root_pp;
-    while (*found && (*found)->value != value) {
-        if ((*found)->value > value) {
-            *found = (*found)->right;
+Node* find_deleting(Node* root_p, int value) {
+    Node* found = root_p;
+    while (found && found->value != value) {
+        if (found->value > value) {
+            found = found->right;
         } else {
-            *found = (*found)->left;
+            found = found->left;
         }
     }
-    if (*found) {
-        return 1;
-    }
-    return 0;
+    return found;
 }
 
 
@@ -83,12 +80,11 @@ int find_leaf2clear(Node** root_pp, int value) {
 }
 
 
-int delete(Node** root_pp, int value) {
+int delete_node(Node** root_pp, int value) {
     if (!root_pp) {
         return 0;
     }
-    Node* found = NULL;
-    find_deleting(root_pp, value, &found);
+    Node* found = find_deleting(*root_pp, value);
     if (!found) {
         return 0;
     }
@@ -107,7 +103,7 @@ int push(Node** root_pp, int value) {
         *root_pp = new_node;
         return 1;
     }
-    Node* leaf = find_leaf(root_pp, value);
+    Node* leaf = find_leaf(*root_pp, value);
     if (!leaf) {
         return 0;
     }
@@ -116,6 +112,35 @@ int push(Node** root_pp, int value) {
     } else {
         leaf->left = new_node;
     }
+    return 1;
+}
+
+
+int delete_leaf(Node** leaf_pp) {
+    if ((*leaf_pp)->left) {
+        delete_leaf(&(*leaf_pp)->left);
+    }
+    if ((*leaf_pp)->right) {
+        delete_leaf(&(*leaf_pp)->right);
+    }
+    free(*leaf_pp);
+    *leaf_pp = NULL;
+    return 1;
+}
+
+
+int delete_root(Node** root_pp) {
+    if (!root_pp || !*root_pp) {
+        return 1;
+    }
+    if ((*root_pp)->left) {
+        delete_leaf(&(*root_pp)->left);
+    }
+    if ((*root_pp)->right) {
+        delete_leaf(&(*root_pp)->right);
+    }
+    free(*root_pp);
+    *root_pp = NULL;
     return 1;
 }
 
@@ -137,12 +162,12 @@ int main(void) {
                 break;
             case 3:
                 scanf(" %i", &value);
-                printf("%i\n", delete(&root, value));
+                printf("%i\n", delete_node(&root, value));
                 break;
             default:
                 break;
         }
     } while (command != 0);
-    free(root);
+    delete_root(&root);
     return 0;
 }
