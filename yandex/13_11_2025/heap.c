@@ -58,11 +58,11 @@ int sift_down(Heap* heap, int index) {
 }
 
 
-int push(Heap* heap, int* value) {
+int push(Heap* heap, int value) {
     if (is_full(heap)) {
         expand(heap);
     }
-    heap->values[heap->size] = *value;
+    heap->values[heap->size] = value;
     sift_up(heap, heap->size);
     heap->size++;
     return 0;
@@ -134,7 +134,7 @@ int main(void) {
         switch (command) {
             case 1:
                 scanf(" %i", &value);
-                push(heap, &value);
+                push(heap, value);
                 break;
             case 2:
                 if (check_heap(heap)) {
