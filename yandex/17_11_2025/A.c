@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 
-
 typedef struct Node {
     int value;
     struct Node* left;
@@ -10,8 +9,8 @@ typedef struct Node {
 } Node;
 
 
-int search(Node** root_pp, int value) {
-    Node* current = *root_pp;
+int search(Node* root_pp, int value) {
+    Node* current = root_pp;
     while (current && current->value != value) {
         if (current->value > value) {
             current = current->right;
@@ -26,85 +25,99 @@ int search(Node** root_pp, int value) {
 }
 
 
-
-int search_with_parent(Node** root_pp, int value, Node** found, Node** parent) {
-    *found = *root_pp;
-    while (found && (*found)->value != value) {
-        *parent = *found;
-        if ((*found)->value > value) {
-            found = &(*found)->right;
-        } else {
-            found = &(*found)->left;
-        }
-    }
-    if (found) {
-        return 1;
-    }
-    return 0;
-}
-
-
-
-
-Node** find_leaf(Node** root_pp, int value) {
-    Node** current = root_pp;
+Node* find_leaf(Node** root_pp, int value) {
+    Node* current = *root_pp;
     while (current) {
-        if ((*current)->value > value) {
-            if (!(*current)->right) {
+        if (current->value > value) {
+            if (!current->right) {
                 return current;
             }
-            current = &((*current)->right);
+            current = current->right;
         } else {
-            if (!(*current)->left) {
+            if (!current->left) {
                 return current;
             }
-            current = &((*current)->left);
+            current = current->left;
         }
     }
     return NULL;
 }
 
 
-
-int push(Node** root_pp, int value) {
-    Node* new_node = malloc(sizeof(Node));
-    new_node->value = value;
-    if (!*root_pp) {
-        *root_pp = new_node;
+int find_deleting(Node** root_pp, int value, Node** found) {
+    *found = *root_pp;
+    while (*found && (*found)->value != value) {
+        if ((*found)->value > value) {
+            *found = (*found)->right;
+        } else {
+            *found = (*found)->left;
+        }
+    }
+    if (*found) {
         return 1;
     }
-    Node** leaf = find_leaf(root_pp, value);
-    if (!leaf) {
-        return  0;
-    }
-    if ((*leaf)->value > value) {
-        (*leaf)->right = new_node;
-    } else {
-        (*leaf)->left = new_node;
-    }
-    return 1;
+    return 0;
 }
 
+
+int find_leaf2clear(Node** root_pp, int value) {
+    Node** current = root_pp;
+    Node** parent;
+    int return_value;
+    while (*current) {
+        parent = current;
+        if (((*current)->value > value && !(*current)->right)
+            || ((*current)->value < value && !(*current)->left)) {
+            return_value = (*current)->value;
+            *parent = NULL;
+            free(*current);
+            return return_value;
+        }
+        if ((*current)->value > value) {
+            current = &(*current)->right;
+        } else {
+            current = &(*current)->left;
+        }
+    }
+    return 0;
+}
 
 
 int delete(Node** root_pp, int value) {
     if (!root_pp) {
         return 0;
     }
-    Node** found = NULL;
-    Node** parent = NULL;
-    search_with_parent(root_pp, value, found, parent);
-
-    if ((*found)->left && (*found)->right) {
-        Node** good_leaf = find_leaf(root_pp, value);
-
-        (*found)->value = (*good_leaf)->value;
+    Node* found = NULL;
+    find_deleting(root_pp, value, &found);
+    if (!found) {
+        return 0;
     }
-    free(*found);
-    *parent = NULL;
+    int new_value = find_leaf2clear(root_pp, value);
+    found->value = new_value;
     return 1;
 }
 
+
+int push(Node** root_pp, int value) {
+    Node* new_node = malloc(sizeof(Node));
+    new_node->value = value;
+    new_node->left = NULL;
+    new_node->right = NULL;
+    if (!*root_pp) {
+        *root_pp = new_node;
+        return 1;
+    }
+    Node* leaf = find_leaf(root_pp, value);
+    if (!leaf) {
+        return 0;
+    }
+    if (leaf->value > value) {
+        leaf->right = new_node;
+    } else {
+        leaf->left = new_node;
+    }
+    return 1;
+}
 
 
 int main(void) {
@@ -116,16 +129,15 @@ int main(void) {
         switch (command) {
             case 1:
                 scanf(" %i", &value);
-                push(&root, &value);
+                printf("%i\n", push(&root, value));
                 break;
             case 2:
                 scanf(" %i", &value);
-                printf("%i\n", search(&root, value));
+                printf("%i\n", search(root, value));
                 break;
             case 3:
                 scanf(" %i", &value);
                 printf("%i\n", delete(&root, value));
-
                 break;
             default:
                 break;
