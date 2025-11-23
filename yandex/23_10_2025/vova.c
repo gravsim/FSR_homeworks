@@ -2,183 +2,136 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-struct list{
-    int value;
-    struct list * next;
-    struct list * prev;
-    
-};
+void up_screening(int heap[], int tmp_index){
+    if (tmp_index == 0){
+        return;
+    }
+    if (heap[(tmp_index - 1)/2] < heap[tmp_index]){
+        int tmp = heap[tmp_index];
+        heap[tmp_index] = heap[(tmp_index - 1)/2];
+        heap[(tmp_index - 1)/2] = tmp;
+        up_screening(heap, (tmp_index - 1)/2);
+    }
+    return;
+}
 
-int ins_begin(struct list** head, struct list** tail, int value){
-    struct list* new_list = (struct list*)malloc(sizeof(struct list));
-    if (!new_list){
+void ins(int heap[], int * size, int value){
+    heap[*size] = value;
+    up_screening(heap, *size);
+    (*size)++;
+    return;
+}
+
+int check_max(int heap[], int size){
+    if (size != 0){
+        return heap[0];
+    }
+    else{
+        return - 1;
+    }
+}
+
+void down_screening(int heap[], int tmp_index, int size){
+    int maxi = tmp_index;
+    if (size != 0){
+        if (2 * tmp_index + 1 < size && heap[2 * tmp_index + 1] > heap[maxi]){
+            maxi = 2 * tmp_index + 1;
+        }
+        if (2 * tmp_index + 2 < size && heap[2 * tmp_index + 2] > heap[maxi]){
+            maxi = 2 * tmp_index + 2;
+        }
+        if (maxi != tmp_index){
+            int tmp = heap[tmp_index];
+            heap[tmp_index] = heap[maxi];
+            heap[maxi] = tmp;
+            down_screening(heap, maxi, size);
+        }
+    }
+    return;
+}
+
+int drawing_max(int heap[], int * size){
+    if (*size != 0){
+        int maxi = heap[0];
+        heap[0] = heap[*size - 1];
+        (*size)--;
+        down_screening(heap, 0, *size);
+        return maxi;
+    }
+    else{
         return -1;
     }
-    new_list->value = value;
-    if (!*head){
-        new_list -> next = NULL;
-        new_list -> prev = NULL;
-        *head = new_list;
-        *tail = new_list;
+}
+
+
+int switching(int heap[], int size, int prev, int new_value){
+    int i = 0;
+    if (size == 0){
+        return -1;
+    }
+    while (heap[i] != prev && i < size){
+        i++;
+    }
+    if (i == size){
         return 0;
     }
-    new_list -> next = *head;
-    new_list -> prev = NULL;
-    (*head)->prev = new_list;
-    *head = new_list;
-    return 0; 
-}
-
-int ins_end(struct list** head, struct list** tail, int value){
-    struct list* new_list = (struct list*)malloc(sizeof(struct list));
-    if (!new_list){
-        return -1;
-    }
-    new_list->value = value;
-    if (!*tail){
-        new_list -> next = NULL;
-        new_list -> prev = NULL;
-        *tail = new_list;
-        *head = new_list;
-        return 0;
-    }
-    new_list -> next = NULL;
-    new_list->prev = *tail;
-    (*tail)->next = new_list;
-    *tail = new_list;
-    return 0; 
-}
-
-
-int pop_begin(struct list** head, struct list** tail){
-    if (*head == NULL) {
-        return -1;
-    }
-    int value = (*head)->value;
-    struct list * tmp = *head;
-    *head = (*head) -> next;
-    if (*head != NULL){
-        (*head)->prev = NULL;
+    int old = heap[i];
+    heap[i] = new_value;
+    if (new_value >= old){
+        up_screening(heap, i);
     }
     else{
-        *tail = NULL;
+        down_screening(heap, i, size);
     }
-    free(tmp);
-    return value;
+    return 0;
 }
 
-int pop_tail(struct list** head, struct list** tail){
-    if (*tail == NULL) {
-        return -1;
-    }
-    int value = (*tail)->value;
-    struct list * tmp = *tail;
-    *tail = (*tail) -> prev;
-    if (*tail != NULL){
-        (*tail)->next = NULL;
-    }
-    else{
-        *head = NULL;
-    }
-    free(tmp);
-    return value;
-}
-
-int top(struct list** head){
-  if (*head != NULL){
-      return ((*head)->value);
-    }
-    else{
-        return -1;
-    }
-}
-
-int back(struct list** tail){
-  if (*tail != NULL){
-      return ((*tail)->value);
-    }
-    else{
-        return -1;
-    }
-}
-
-int is_empty(struct list ** head){
-  if (*head != NULL){
-      return 0;
-    }
-    else{
-        return 1;
-    }
-}
-
-
-void clear(struct list ** head, struct list** tail){
-    while (*head != NULL){
-        struct list * tmp = *head;
-        *head = (*head)->next;
-        free (tmp);
-    }
-    *tail = NULL;
-}
-int main(void) {
+int main(void){
     int tmp_command = -1;
     int value;
-    struct list* head = NULL;
-    struct list* tail = NULL;
+    int heap[100000] = {0};
+    int size = 0;
+    int top = 0;
+    int prev = 0;
+    int maxi = 0;
     while (tmp_command != 0){
         scanf("%d", &tmp_command);
         switch (tmp_command){
             case 1:
                 scanf(" %d", &value);
-                ins_begin(&head, &tail, value);
+              ins(heap, &size, value);
                 break;
             case 2:
-                scanf(" %d", &value);
-                ins_end(&head, &tail, value);
-                break;
-            case 3:
-                value = pop_begin(&head, &tail);
-                if (value == -1){
-                    printf("Deque is empty\n");
+                maxi = check_max(heap, size);
+                if (maxi != -1){
+                    printf("%d\n", maxi);
                 }
                 else{
-                    printf("%d\n", value);
+                    printf("Heap is empty\n");
+                }
+                break;
+            case 3:
+                top = drawing_max(heap, &size);
+                if (top == -1){
+                    printf("Heap is empty\n");
+                }
+                else{
+                    printf("%d\n", top);
                 }
                 break;
             case 4:
-                value = pop_tail(&head, &tail);
-                if (value == -1){
-                    printf("Deque is empty\n");
+                prev = 0;
+                int new_value = 0;
+                scanf("%d %d", &prev, &new_value);
+                int tmp = switching(heap, size, prev, new_value);
+                if (tmp == -1){
+                    printf("Heap is empty\n");
                 }
-                else{
-                    printf("%d\n", value);
-                }
-                break;
-            case 5:
-                if (top(&head) != -1){
-                    printf("%d\n", top(&head));
-                }
-                else{
-                    printf("Deque is empty\n");
-                }
-                break;
-            case 6:
-                if (back(&tail) != -1){
-                    printf("%d\n", back(&tail));
-                }
-                else{
-                    printf("Deque is empty\n");
-                }
-                break;
-            case 7:
-                printf("%d\n", 1 - is_empty(&head));
-                break;
-            case 8:
-                clear(&head, &tail);
                 break;
             default:
                 break;
         }
     }
-    clear(&head, &tail);
+
+    return 0;
 }

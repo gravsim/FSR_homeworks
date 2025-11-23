@@ -15,16 +15,6 @@ int norm_index(Deque* deque, int index) {
 }
 
 
-void print_deque(Deque* deque) {
-    int i;
-    printf("Deque: ");
-    for (i = deque->front; i < deque->back; i++) {
-        printf("%d ", deque->values[norm_index(deque, i)]);
-    }
-    printf("\n");
-}
-
-
 int is_full(Deque* deque) {
     return deque->back - deque->front == deque->capacity;
 }
@@ -108,14 +98,20 @@ int check_deque(Deque* deque) {
 }
 
 
-int main(void) {
-    int command;
-    int value;
+Deque* init_deque(void) {
     Deque* deque = malloc(sizeof(Deque));
     deque->front = 0;
     deque->back = 0;
-    deque->capacity = 100000000;
+    deque->capacity = 100;
     deque->values = (int*)calloc(deque->capacity, sizeof(int));
+    return deque;
+}
+
+
+int main(void) {
+    int command;
+    int value;
+    Deque* deque = init_deque();
     do {
         scanf("%i", &command);
         switch (command) {
@@ -160,7 +156,6 @@ int main(void) {
             default:
                 break;
         }
-        // print_deque(deque) ;
     } while (command != 0);
     free(deque->values);
     free(deque);
