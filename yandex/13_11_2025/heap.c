@@ -27,6 +27,7 @@ int is_empty(Heap* heap) {
 }
 
 
+
 void expand(Heap* heap) {
     heap->capacity *= 2;
     heap->values = (int*)realloc(heap->values, heap->capacity * sizeof(int));
