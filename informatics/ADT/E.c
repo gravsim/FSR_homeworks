@@ -10,7 +10,7 @@ typedef struct Queue {
 } Queue;
 
 
-struct Game {
+typedef struct Game {
     long long teams_number;
     Queue* queue;
     long long team1;
@@ -22,7 +22,7 @@ struct Game {
     long long games_played;
     long long* teams1;
     long long* teams2;
-} typedef Game;
+} Game;
 
 
 int norm_index(Queue* queue, long long index) {
