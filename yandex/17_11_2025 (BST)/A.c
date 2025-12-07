@@ -24,7 +24,7 @@ Node** search_node(Node** current, int value) {
 }
 
 
-Node** find_right_min(Node** node) {
+Node** find_min(Node** node) {
     /*
         Ищем узел с минимальным значением в дереве с корнем node.
     */
@@ -62,7 +62,7 @@ int delete_node(Node** node_pp) {
         return 1;
     }
     // Есть оба ребенка
-    Node** descendant = find_right_min(&(*node_pp)->left);
+    Node** descendant = find_min(&(*node_pp)->left);
     (*node_pp)->value = (*descendant)->value;
     return delete_node(descendant);
 }
