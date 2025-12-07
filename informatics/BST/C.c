@@ -9,19 +9,19 @@ typedef struct Node {
 } Node;
 
 
-Node** search_node(Node** current, int* sum, int index) {
+Node** search_node_by_index(Node** current, int* sum, int index) {
     /*
         Ищем узел с индексом index в дереве current.
     */
-    printf("FINDING");
+    // printf("FINDING");
     if (!current || !*current) {
         return NULL;
     }
-    if ((*current)->left) {
-        // Ищем в левом поддереве.
-        Node** left_result = search_node(&(*current)->left, sum, index);
-        if (left_result) {
-            return left_result;
+    if ((*current)->right) {
+        // Ищем в правом поддереве.
+        Node** right_result = search_node_by_index(&(*current)->right, sum, index);
+        if (right_result) {
+            return right_result;
         }
     }
     if (*sum == index) {
@@ -29,9 +29,38 @@ Node** search_node(Node** current, int* sum, int index) {
         return current;
     }
     (*sum)++;
+    if ((*current)->left) {
+        // Ищем в левом поддереве.
+        return search_node_by_index(&(*current)->left, sum, index);
+    }
+    // Ничего не нашли.
+    return NULL;
+}
+
+
+Node** search_node_by_value(Node** current, int* sum, int value) {
+    /*
+        Ищем узел со значением value в дереве current.
+    */
+    // printf("FINDING");
+    if (!current || !*current) {
+        return NULL;
+    }
     if ((*current)->right) {
         // Ищем в правом поддереве.
-        return search_node(&(*current)->right, sum, index);
+        Node** right_result = search_node_by_value(&(*current)->right, sum, value);
+        if (right_result) {
+            return right_result;
+        }
+    }
+    if ((*current)->value == value) {
+        // Если индекс элемента совпал с нужным, возвращаем его.
+        return current;
+    }
+    (*sum)++;
+    if ((*current)->left) {
+        // Ищем в левом поддереве.
+        return search_node_by_value(&(*current)->left, sum, value);
     }
     // Ничего не нашли.
     return NULL;
@@ -155,7 +184,8 @@ int free_root(Node** root_pp) {
 
 int main(void) {
     int command;
-    int value;
+    int height;
+    int index;
     Node* root = NULL;
     int N;
     int sum;
@@ -166,16 +196,16 @@ int main(void) {
         scanf("%i", &command);
         switch (command) {
             case 1:
-                scanf(" %i", &value);
-                root = push(root, value);
+                scanf(" %i", &height);
+                root = push(root, height);
                 sum = 0;
-                search_node(&root, &sum, value);
+                search_node_by_value(&root, &sum, height);
                 printf("%i\n", sum);
                 break;
             case 2:
-                scanf(" %i", &value);
+                scanf(" %i", &index);
                 sum = 0;
-                found = search_node(&root, &sum, value);
+                found = search_node_by_index(&root, &sum, index);
                 delete_node(found);
                 break;
             default:
