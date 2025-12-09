@@ -22,25 +22,18 @@ int is_full(Heap* heap) {
 }
 
 
-int expand(Heap* heap) {
-    if (!heap) {
-        return -1;
-    }
+void expand(Heap* heap) {
     heap->capacity *= 2;
     heap->values = (int*)realloc(heap->values, heap->capacity * sizeof(int));
-    return 1;
 }
 
 
 int sift_up(Heap* heap, int index) {
-    if (!heap) {
-        return -1;
-    }
     while (index > 0 && heap->values[index] > heap->values[(index - 1) / 2]) {
         swap(&heap->values[index], &heap->values[(index - 1) / 2]);
         index = (index - 1) / 2;
     }
-    return 1;
+    return 0;
 }
 
 
@@ -65,69 +58,46 @@ int sift_down(Heap* heap, int index) {
 
 
 int push(Heap* heap, int value) {
-    if (!heap) {
-        return -1;
-    }
     if (is_full(heap)) {
         expand(heap);
     }
     heap->values[heap->size] = value;
     sift_up(heap, heap->size);
     heap->size++;
-    return 1;
+    return 0;
 }
 
 
-int print_heap(Heap* heap) {
-    if (!heap) {
-        return -1;
-    }
-    int i;
-    for (i = 0; i < heap->size; i++) {
-        printf("%d ", heap->values[i]);
-    }
-    return 1;
-}
-
-
-int decrease(Heap* heap, int index, int value) {
-    heap->values[index] -= value;
-    return sift_down(heap, index) + 1;
+int pop_maximum(Heap* heap, int* value) {
+    *value = heap->values[0];
+    heap->values[0] = heap->values[--heap->size];
+    return sift_down(heap, 0) + 1;
 }
 
 
 int init_heap(Heap** heap) {
-    if (!heap) {
-        return -1;
-    }
     *heap = malloc(sizeof(Heap));
     (*heap)->size = 0;
-    (*heap)->capacity = 5;
+    (*heap)->capacity = 1000;
     (*heap)->values = (int*)calloc((*heap)->capacity, sizeof(int));
-    return 1;
+    return 0;
 }
 
 
 int main(void) {
-    int index;
     int N;
-    int M;
+    scanf("%d", &N);
     int value;
     Heap* heap;
     init_heap(&heap);
     int i;
-    scanf("%d", &N);
     for (i = 0; i < N; i++) {
         scanf("%d", &value);
         push(heap, value);
     }
-    scanf("%d", &M);
-    for (i = 0; i < M; i++) {
-        scanf("%d %d", &index, &value);
-        index--;
-        printf("%d\n", decrease(heap, index, value));
+    for (i = 0; i < N - 1; i++) {
+        printf("%d %d\n", pop_maximum(heap, &value), value);
     }
-    print_heap(heap);
     free(heap->values);
     free(heap);
     return 0;
