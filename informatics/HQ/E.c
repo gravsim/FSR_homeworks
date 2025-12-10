@@ -22,11 +22,6 @@ int is_full(Heap* heap) {
 }
 
 
-int is_empty(Heap* heap) {
-    return heap->size == 0;
-}
-
-
 void expand(Heap* heap) {
     heap->capacity *= 2;
     heap->values = (int*)realloc(heap->values, heap->capacity * sizeof(int));
@@ -77,66 +72,37 @@ int pop_minimum(Heap* heap, int* value) {
 }
 
 
-int clear(Heap* heap) {
-    if (!heap) {
-        return -1;
-    }
-    heap->size = 0;
-    return 1;
-}
-
-
-int check_heap(Heap* heap) {
-    int true_false = is_empty(heap);
-    if (true_false) {
-        printf("CANNOT\n");
-    }
-    return !true_false;
-}
-
-
 int init_heap(Heap** heap) {
     *heap = malloc(sizeof(Heap));
     (*heap)->size = 0;
-    (*heap)->capacity = 5;
+    (*heap)->capacity = 1000;
     (*heap)->values = (int*)calloc((*heap)->capacity, sizeof(int));
     return 0;
 }
 
 
-int is_str_equal(char* sample, char* command) {
-    int i = 0;
-    while (command[i] != '\0') {
-        if (command[i] != sample[i]) {
-            return 0;
-        }
-        i++;
-    }
-    return 1;
-}
-
-
 int main(void) {
     /*
-        В этой задаче используем кучу с минимумом в корне.
+       В этой задаче используем кучу с минимумом в корне.
     */
+    int N;
+    scanf("%d", &N);
     int value;
     Heap* heap;
     init_heap(&heap);
-    char command[20];
-    while (scanf("%15s", command) == 1) {
-        if (is_str_equal("ADD", command)) {
-            scanf(" %d", &value);
-            push(heap, value);
-        } else if (is_str_equal("EXTRACT", command)) {
-            if (check_heap(heap)) {
-                pop_minimum(heap, &value);
-                printf("%d\n", value);
-            }
-        } else if (is_str_equal("CLEAR", command)) {
-            clear(heap);
-        }
+    double total_cost = 0;
+    int i;
+    for (i = 0; i < N; i++) {
+        scanf("%d", &value);
+        push(heap, value);
     }
+    while (heap->size > 1) {
+        pop_minimum(heap, &value);
+        heap->values[0] += value;
+        total_cost += 0.05 * heap->values[0];
+        sift_down(heap, 0);
+    }
+    printf("%.2lf", total_cost);
     free(heap->values);
     free(heap);
     return 0;
