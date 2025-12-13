@@ -1,58 +1,52 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 
-char** allocate_tril(int size) {
+char** allocate_matrix(int size) {
     char** matrix = calloc(size, sizeof(char*));
     int i;
     for (i = 0; i < size; i++) {
-        matrix[i] = calloc(size - i, sizeof(char));
+        matrix[i] = calloc(size, sizeof(char));
     }
     return matrix;
-}
-
-
-int copy_ways(char** array, int size, int i, int j) {
-    if (!array || j >= size || i >= size) {
-        return -1;
-    }
-    int k;
-    for (k = 1; k < size - (i + j); k++) {
-        if (array[i + j][k] == 1) {
-            array[i][k + j] = 1;
-        }
-    }
-    return 1;
 }
 
 
 int main(void) {
     int N;
     scanf("%d", &N);
-    char** connections = allocate_tril(N);
+    char** connections = allocate_matrix(N);
     int i;
     int j;
     int k;
     int answer = 1;
-    char** red_reached = allocate_tril(N);
-    char** blue_reached = allocate_tril(N);
+    int words = (N + 63) / 64;
+    uint64_t** red_reached = malloc(N * sizeof(uint64_t*));
+    uint64_t** blue_reached = malloc(N * sizeof(uint64_t*));
+    for (i = 0; i < N; i++) {
+        red_reached[i] = calloc(words, sizeof(uint64_t));
+        blue_reached[i] = calloc(words, sizeof(uint64_t));
+    }
     for (i = 0; i < N - 1; i++) {
-        scanf("%s", connections[i]);
+        scanf("%s", connections[i] + i);
     }
     i = N - 2;
     while (answer == 1 && i >= 0) {
-        for (j = 0; j < N - i; j++) {
+        for (j = i + 1; j < N; j++) {
             if (connections[i][j] == 'R') {
-                red_reached[i][j + 1] = 1;
-                copy_ways(red_reached, N, i, j + 1);
+                red_reached[i][j >> 6] |= 1ULL << (j % 64);
+                for (k = 0; k < words; k++)
+                    red_reached[i][k] |= red_reached[j][k];
             } else if (connections[i][j] == 'B') {
-                blue_reached[i][j + 1] = 1;
-                copy_ways(blue_reached, N, i, j + 1);
+                blue_reached[i][j >> 6] |= 1ULL << (j % 64);
+                for (k = 0; k < words; k++)
+                    blue_reached[i][k] |= blue_reached[j][k];
             }
         }
-        k = 1;
-        while (answer == 1 && k < N - i) {
-            if (red_reached[i][k] == 1 && blue_reached[i][k] == 1) {
+        k = 0;
+        while (answer == 1 && k < words) {
+            if (red_reached[i][k] & blue_reached[i][k]) {
                 answer = 0;
             }
             k++;
@@ -64,6 +58,8 @@ int main(void) {
     } else {
         printf("NO");
     }
+    for (i = 0; i < N; i++)
+        free(connections[i]);
     free(connections);
     for (i = 0; i < N; i++) {
         free(red_reached[i]);
