@@ -12,6 +12,27 @@ char** allocate_matrix(int size) {
 }
 
 
+unsigned long long check_bit(unsigned long long number, int bit_index) {
+    return number & 1ULL << (bit_index % 64);
+}
+
+int set_bit(unsigned long long* number, int bit_index) {
+    /*
+    1ULL - unsigned long long размером 64 бита, значение: 1.
+    Выглядит так: 000...(63 нуля)...0001
+    Делаем побитовый сдвиг влево единицы на остаток при делении индекса j+1 на 64.
+    Получаем смещение в числе которое выглядит так: 000000100..((j+1)%64 нулей)..00
+    Делаем побитовое или для строки смежности i-й вершины и этого сдвига,
+    чтобы вершина j+1 в i-й строке матрицы смежности стала единицей.
+    */
+    if (!number) {
+        return -1;
+    }
+    *number |= 1ULL << (bit_index % 64);
+    return 1;
+}
+
+
 int main(void) {
     /*
      Т.к. булов в си нету, будем хранить значения есть/нету
@@ -49,15 +70,7 @@ int main(void) {
         */
         for (j = i; j < N; j++) {
             if (connections[i][j] == 'R') {
-                red_reached[i][(j + 1) / 64] |= 1ULL << ((j + 1) % 64);
-                /*
-                1ULL - unsigned long long размером 64 бита, значение: 1.
-                Выглядит так: 000...(63 нуля)...0001
-                Делаем побитовый сдвиг влево единицы на остаток при делении индекса j+1 на 64.
-                Получаем смещение в числе которое выглядит так: 000000100..((j+1)%64 нулей)..00
-                Делаем побитовое или для строки смежности i-й вершины и этого сдвига,
-                чтобы вершина j+1 в i-й строке матрицы смежности стала единицей.
-                */
+                set_bit(&red_reached[i][(j + 1) / 64], j + 1);
                 for (k = 0; k < numbers; k++) {
                     red_reached[i][k] |= red_reached[(j + 1)][k];
                     /*
@@ -72,7 +85,7 @@ int main(void) {
                     */
                 }
             } else if (connections[i][j] == 'B') {
-                blue_reached[i][(j + 1) / 64] |= 1ULL << ((j + 1) % 64);
+                set_bit(&blue_reached[i][(j + 1) / 64], j + 1);
                 for (k = 0; k < numbers; k++) {
                     blue_reached[i][k] |= blue_reached[(j + 1)][k];
                 }
