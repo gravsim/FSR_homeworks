@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CHUNK_SIZE sizeof(unsigned long long)
+#define CHUNK_SIZE (8 * sizeof(unsigned long long))
 
 
 unsigned long long** allocate_matrix(int size, int numbers) {

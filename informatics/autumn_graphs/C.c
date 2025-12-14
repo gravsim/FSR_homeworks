@@ -2,6 +2,9 @@
 #include <stdlib.h>
 
 
+#define CHUNK_SIZE (8 * sizeof(unsigned long long))
+
+
 char** allocate_matrix(int size) {
     char** matrix = calloc(size, sizeof(char*));
     int i;
@@ -13,22 +16,22 @@ char** allocate_matrix(int size) {
 
 
 unsigned long long check_bit(unsigned long long number, int bit_index) {
-    return number & 1ULL << (bit_index % 64);
+    return number & 1ULL << (bit_index % CHUNK_SIZE);
 }
 
 int set_bit(unsigned long long* number, int bit_index) {
     /*
-    1ULL - unsigned long long размером 64 бита, значение: 1.
+    1ULL - unsigned long long размером CHUNK_SIZE бита, значение: 1.
     Выглядит так: 000...(63 нуля)...0001
-    Делаем побитовый сдвиг влево единицы на остаток при делении индекса j+1 на 64.
-    Получаем смещение в числе которое выглядит так: 000000100..((j+1)%64 нулей)..00
+    Делаем побитовый сдвиг влево единицы на остаток при делении индекса j+1 на CHUNK_SIZE.
+    Получаем смещение в числе которое выглядит так: 000000100..((j+1)%CHUNK_SIZE нулей)..00
     Делаем побитовое или для строки смежности i-й вершины и этого сдвига,
     чтобы вершина j+1 в i-й строке матрицы смежности стала единицей.
     */
     if (!number) {
         return -1;
     }
-    *number |= 1ULL << (bit_index % 64);
+    *number |= 1ULL << (bit_index % CHUNK_SIZE);
     return 1;
 }
 
@@ -37,8 +40,8 @@ int main(void) {
     /*
      Т.к. булов в си нету, будем хранить значения есть/нету
      пути из вершины i в вершину j
-     в битах 64-разрядных чисел. Таких чисел понадобится
-     (N + 63) / 64 (округление в большую сторону).
+     в битах CHUNK_SIZE-разрядных чисел. Таких чисел понадобится
+     (N + 63) / CHUNK_SIZE (округление в большую сторону).
      Создаем два массива с числами, в которых будем хранить
      состояния посещенных вершин: red_reached: N * N, blue_reached: N ^ N.
      В i-й строке j-м столбце матрицы стоит 1, если из i-й вершины
@@ -51,7 +54,7 @@ int main(void) {
     int j;
     int k;
     int answer = 1;
-    int numbers = (N + 63) / 64;
+    int numbers = (N + CHUNK_SIZE - 1) / CHUNK_SIZE;
     unsigned long long** red_reached = malloc(N * sizeof(unsigned long long*));
     unsigned long long** blue_reached = malloc(N * sizeof(unsigned long long*));
     for (i = 0; i < N; i++) {
@@ -70,7 +73,7 @@ int main(void) {
         */
         for (j = i; j < N; j++) {
             if (connections[i][j] == 'R') {
-                set_bit(&red_reached[i][(j + 1) / 64], j + 1);
+                set_bit(&red_reached[i][(j + 1) / CHUNK_SIZE], j + 1);
                 for (k = 0; k < numbers; k++) {
                     red_reached[i][k] |= red_reached[(j + 1)][k];
                     /*
@@ -85,7 +88,7 @@ int main(void) {
                     */
                 }
             } else if (connections[i][j] == 'B') {
-                set_bit(&blue_reached[i][(j + 1) / 64], j + 1);
+                set_bit(&blue_reached[i][(j + 1) / CHUNK_SIZE], j + 1);
                 for (k = 0; k < numbers; k++) {
                     blue_reached[i][k] |= blue_reached[(j + 1)][k];
                 }

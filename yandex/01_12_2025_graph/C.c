@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 
-#define CHUNK_SIZE sizeof(unsigned long long)
+#define CHUNK_SIZE (8 * sizeof(unsigned long long))
 
 
 unsigned long long** allocate_matrix(int size, int numbers) {
@@ -45,6 +45,7 @@ int main(void) {
         for (j = borders[i]; j < borders[i + 1]; j++) {
             scanf("%d", &vertex);
             set_bit(&connections[i][vertex / CHUNK_SIZE], vertex);
+            set_bit(&connections[vertex][i / CHUNK_SIZE], i);
         }
     }
     for (i = 0; i < V; i++) {
