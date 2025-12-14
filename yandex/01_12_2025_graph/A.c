@@ -32,6 +32,5 @@ int main(void) {
     for (i = 0; i < V; i++)
         free(connections[i]);
     free(connections);
-
     return 0;
 }
