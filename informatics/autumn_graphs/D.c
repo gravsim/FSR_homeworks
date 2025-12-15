@@ -4,7 +4,7 @@
 #include <limits.h>
 
 
-#define MAX_DOTS 10
+#define MAX_DOTS 1000
 #define DOUBLE_MAX 1e20
 
 
@@ -82,9 +82,6 @@ int is_in_rectangle(double X, double Y, double x, double y) {
 }
 
 
-
-
-
 int find_intersection(double* line0, double* line1, double* x, double* y) {
     /*
         C R A M E R ' S   R U L E
@@ -117,6 +114,53 @@ int in_storage(double** storage, int size, double x, double y) {
 
 
 
+int matrix_multiply(int** matrix1, int** matrix2, int** result, int size1, int size2) {
+    int i;
+    int j;
+    int k;
+    for (i = 0; i < size1; i++) {
+        for (j = 0; j < size2; j++) {
+            for (k = 0; k < size1; k++) {
+                result[i][j] += matrix1[i][k] * matrix2[k][j];
+            }
+        }
+    }
+}
+
+
+int** allocate_matrix(int size) {
+    int** matrix = calloc(size, sizeof(int*));
+    int i;
+    for (i = 0; i < size; i++) {
+        matrix[i] = calloc(size, sizeof(int));
+    }
+    return matrix;
+}
+
+
+int free_matrix(int** matrix, int size) {
+    if (!matrix) {
+        return -1;
+    }
+    int i;
+    for (i = 0; i < size; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+    return 1;
+}
+
+
+int trace(int** matrix, int size) {
+    int i;
+    int result = 0;
+    for (i = 0; i < size; i++) {
+        result += matrix[i][i];
+    }
+    return result;
+}
+
+
 int main(void) {
     int i;
     int j;
@@ -137,7 +181,6 @@ int main(void) {
         lines[i] = calloc(3, sizeof(double));
         dots[i] = calloc(MAX_DOTS, sizeof(int));
     }
-    int polygons = 0;
     double x;
     double y;
     lines[0][0] = 1.0;
@@ -179,13 +222,6 @@ int main(void) {
             }
         }
     }
-    for (i = 0; i < total_lines; i++) {
-        for (j = 0; j < MAX_DOTS; j++) {
-            printf("%d ", dots[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\ndots_amount: %d\n", dots_amount);
     // Сделали массив, показывающий какие точки лежат на каких прямых.
     quick_sort(storage, dots, total_lines, 0, dots_amount - 1);
     int** connections = calloc(dots_amount, sizeof(int*));
@@ -193,7 +229,6 @@ int main(void) {
         connections[i] = calloc(dots_amount, sizeof(int));
     }
     int k;
-    printf("ABOBA 3\n");
     for (i = 0; i < dots_amount; i++) {
         for (j = 0; j < total_lines; j++) {
             if (dots[j][i]) {
@@ -214,17 +249,22 @@ int main(void) {
             }
         }
     }
-
-    for (i = 0; i < dots_amount; i++) {
-        for (j = 0; j < dots_amount; j++) {
-            printf("%d ", connections[i][j]);
-        }
-        printf("\n");
-    }
-    printf("%d", polygons);
+    int** square = allocate_matrix(dots_amount);
+    int** cube = allocate_matrix(dots_amount);
+    matrix_multiply(connections, connections, square, dots_amount, dots_amount);
+    matrix_multiply(square, connections, cube, dots_amount, dots_amount);
+    printf("%d", trace(cube, dots_amount) / 6);
     for (i = 0; i < total_lines; i++) {
         free(lines[i]);
+        free(dots[i]);
     }
+    for (i = 0; i < MAX_DOTS; i++) {
+        free(storage[i]);
+    }
+    free_matrix(square, dots_amount);
+    free_matrix(cube, dots_amount);
     free(lines);
+    free(dots);
+    free(storage);
     return 0;
 }
