@@ -15,6 +15,9 @@ typedef struct Bitset {
 
 
 Bitset* allocate_bitset(int size) {
+    /*
+        Creating bitset.
+    */
     Bitset* bitset = malloc(sizeof(Bitset));
     bitset->size = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
     bitset->array = calloc(bitset->size, sizeof(unsigned long));
@@ -23,6 +26,9 @@ Bitset* allocate_bitset(int size) {
 
 
 Bitset** allocate_bitsets_array(int size) {
+    /*
+        Creating array of bitsets.
+    */
     Bitset** matrix = calloc(size, sizeof(Bitset*));
     int i;
     for (i = 0; i < size; i++) {
@@ -33,6 +39,9 @@ Bitset** allocate_bitsets_array(int size) {
 
 
 int check_bit(Bitset* bitset, int bit_index) {
+    /*
+        Check if bit in index `bit_index` is 0 or 1 in `bitset` bitset.
+    */
     if (bitset->array[bit_index / CHUNK_SIZE] & 1UL << (bit_index % CHUNK_SIZE)) {
         return 1;
     }
@@ -41,6 +50,9 @@ int check_bit(Bitset* bitset, int bit_index) {
 
 
 void set_bit(Bitset* bitset, int bit_index) {
+    /*
+        Set bit in index `bit_index` to 1 in `bitset` bitset.
+    */
     bitset->array[bit_index / CHUNK_SIZE] |= 1UL << (bit_index % CHUNK_SIZE);
 }
 
@@ -64,22 +76,37 @@ int equal(double a, double b) {
 }
 
 
-void swap_int(int* a, int* b) {
+int swap_int(int* a, int* b) {
+    if (!a || !b) {
+        return -1;
+    }
     int tmp = *a;
     *a = *b;
     *b = tmp;
+    return 1;
 }
 
 
-void swap_double_pointers(double** a, double** b) {
+int swap_double_pointers(double** a, double** b) {
+    if (!a || !b) {
+        return -1;
+    }
     double* tmp = *a;
     *a = *b;
     *b = tmp;
+    return 1;
 }
 
 
-
 int is_smaller(double a[2], double b[2]) {
+    /*
+         Checks what vector is smaller by simple logic.
+         Let there be 2 vectors: a(x1, y1), b(x2, y2).
+         Then:
+         - If x2 > x1 => a > b
+         - If x2 = x1, y2 > y1 => a > b
+         - If x2 = x1, y2 = y1 => a = b
+    */
     if (!equal(a[0],b[0])) return a[0] < b[0];
     if (!equal(a[1],b[1])) return a[1] < b[1];
     return 0;
@@ -88,10 +115,11 @@ int is_smaller(double a[2], double b[2]) {
 
 void quick_sort(double** main_array, int** side_array, int size, int down, int up) {
     /*
-         Слегка измененный QuickSort.
-         Над побочным массивом (в нашем случае indices) производим все те же операции,
-         что и над главным массивом, который мы сортируем. Это нужно, чтобы запомнить
-         исходный порядок элементов в главном массиве, и в дальнейшем его восстановить.
+         Slightly changed QuickSort.
+         Sort `side_array` same way as `main_array`. We are comparing 2 vectors in `is_smaller` function.
+         Sort `storage` of points by x, and then y coordinate.
+
+         Because `dots` is matrix, we are sorting it in cycle by columns.
     */
     if (down >= up) {
         return;
@@ -122,22 +150,32 @@ void quick_sort(double** main_array, int** side_array, int size, int down, int u
 
 
 int is_in_rectangle(double X, double Y, double x, double y) {
+    /*
+        Check if found point of intersection of 2 lines (x, y) is inside of given rectangle.
+    */
     if (X > 0) {
         if (Y > 0) {
-            return (x > 0 || equal(x, 0))  && (x < X || equal(x, X)) && (y > 0 || equal(y, 0)) && (y < Y || equal(y, Y));
+            return (x > 0 || equal(x, 0)) && (x < X || equal(x, X))
+            && (y > 0 || equal(y, 0)) && (y < Y || equal(y, Y));
         }
-        return (x > 0 || equal(x, 0))  && (x < X || equal(x, X)) && (y < 0 || equal(y, 0)) && (y > Y || equal(y, Y));
+        return (x > 0 || equal(x, 0)) && (x < X || equal(x, X))
+        && (y < 0 || equal(y, 0)) && (y > Y || equal(y, Y));
     }
     if (Y > 0) {
-        return (x < 0 || equal(x, 0))  && (x > X || equal(x, X)) && (y > 0 || equal(y, 0)) && (y < Y || equal(y, Y));
+        return (x < 0 || equal(x, 0)) && (x > X || equal(x, X))
+        && (y > 0 || equal(y, 0)) && (y < Y || equal(y, Y));
     }
-    return (x < 0 || equal(x, 0))  && (x > X || equal(x, X)) && (y < 0 || equal(y, 0)) && (y > Y || equal(y, Y));
+    return (x < 0 || equal(x, 0)) && (x > X || equal(x, X))
+    && (y < 0 || equal(y, 0)) && (y > Y || equal(y, Y));
 }
 
 
 int find_intersection(double* line0, double* line1, double* x, double* y) {
     /*
         C R A M E R ' S   R U L E
+        Find point of intersection of 2 lines by A, B, C parameters of 2 lines:
+        A0x + B0y + C0 = 0
+        A1x + B1y + C1 = 0
     */
     if (!line0 || !line1) {
         return 0;
@@ -155,6 +193,14 @@ int find_intersection(double* line0, double* line1, double* x, double* y) {
 
 
 int in_storage(double** storage, int size, double x, double y) {
+    /*
+    Check if dot (x, y) is stored in `storage` array.
+        - if stored -> return its index in `storage`.
+        - if not stored -> return `-1`.
+    */
+    if (!storage) {
+        return -1;
+    }
     int i = 0;
     while (i < size && !(equal(storage[i][0], x) && equal(storage[i][1], y))) {
         i++;
@@ -163,52 +209,6 @@ int in_storage(double** storage, int size, double x, double y) {
         return i;
     }
     return -1;
-}
-
-
-
-int count_triangles() {
-
-}
-
-
-
-
-int matrix_multiply(Bitset** matrix1, Bitset** matrix2_T, Bitset** result, int size) {
-    if (!matrix1 || !matrix2_T || !result) {
-        return -1;
-    }
-    int i;
-    int j;
-    int chunk;
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < matrix2_T[0]->size; j++) {
-            result[i]->array[j] = 0;
-        }
-    }
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < size; j++) {
-            chunk = 0;
-            while (chunk < matrix2_T[0]->size) {
-                if (matrix1[i]->array[chunk] & matrix2_T[j]->array[chunk]) {
-                    set_bit(result[i], j);
-                }
-                chunk++;
-            }
-
-        }
-    }
-    return 1;
-}
-
-
-int** allocate_matrix(int size) {
-    int** matrix = calloc(size, sizeof(int*));
-    int i;
-    for (i = 0; i < size; i++) {
-        matrix[i] = calloc(size, sizeof(int));
-    }
-    return matrix;
 }
 
 
@@ -238,17 +238,10 @@ int free_matrix_double(double** matrix, int size) {
 }
 
 
-int trace(Bitset** matrix, int size) {
-    int i;
-    int result = 0;
-    for (i = 0; i < size; i++) {
-        result += check_bit(matrix[i], i);
-    }
-    return result;
-}
-
-
 int add_rectangle_sides(double** lines, double X, double Y) {
+    /*
+        Add to `lines` 4 lines that forms a rectangle.
+    */
     if (!lines) {
         return -1;
     }
@@ -271,7 +264,11 @@ int add_rectangle_sides(double** lines, double X, double Y) {
 }
 
 
-int build_adjacency(Bitset** adjacency_matrix, int** dots,  int dots_amount, int total_lines) {
+int build_adjacency(Bitset** adjacency_matrix, int** dots, int dots_amount, int total_lines) {
+    /*
+        Builds adjacency matrix using information which dots lie on same line.
+        Dots in array sorted by x coordinate.
+    */
     if (!adjacency_matrix || !dots) {
         return -1;
     }
@@ -304,34 +301,38 @@ int build_adjacency(Bitset** adjacency_matrix, int** dots,  int dots_amount, int
 }
 
 
-int transpose(Bitset** matrix, Bitset** transposed, int size) {
-    if (!matrix || !transposed) {
-        return -1;
-    }
+int get_same_vertex_amount(Bitset* vertex1, Bitset* vertex2) {
+    /*
+        Count number of adjacent vertices for 2 given vertices.
+    */
+    int amount = 0;;
     int i;
-    int j;
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < matrix[0]->size; j++) {
-            if (check_bit(matrix[j], i)) {
-                set_bit(transposed[i], j);
-            }
-        }
+    for (i = 0; i < vertex1->size; i++) {
+        amount += __builtin_popcountl(vertex1->array[i] & vertex2->array[i]);
     }
-    return 1;
+    return amount;
 }
 
 
-int find_3_cycles(Bitset** adjacency_matrix, int dots_amount) {
-    // Using theorem from the internet
-    Bitset** square = allocate_bitsets_array(dots_amount);
-    Bitset** transposed = allocate_bitsets_array(dots_amount);
-    transpose(adjacency_matrix, transposed, dots_amount);
-    matrix_multiply(adjacency_matrix, transposed, square, dots_amount);
-    matrix_multiply(square, transposed, adjacency_matrix, dots_amount);
-    int answer = trace(adjacency_matrix, dots_amount) / 6;
-    free_bitsets_int(square, dots_amount);
-    free_bitsets_int(transposed, dots_amount);
-    return answer;
+int find_triangles(Bitset** adjacency_matrix, int dots_amount) {
+    /*
+        Count number of triangles in graph using it `adjacency_matrix`.
+        3 vertices: i, j, k form a triangle if:
+        1) i and j are connected.
+        2) i and k are connected.
+        3) j and k are connected.
+    */
+    int i;
+    int j;
+    int triangles = 0;
+    for (i = 0; i < dots_amount; i++) {
+        for (j = 0; j < dots_amount; j++) {
+            if (check_bit(adjacency_matrix[i], j)) {
+                triangles += get_same_vertex_amount(adjacency_matrix[i], adjacency_matrix[j]);
+            }
+        }
+    }
+    return triangles / 6;
 }
 
 
@@ -340,7 +341,14 @@ int get_all_intersections(int** dots,
                             double** lines,
                             int total_lines,
                             double X,
-                            double Y, int* dots_amount) {
+                            double Y,
+                            int* dots_amount) {
+    /*
+        Add to arrays `dots` and `storage` all point of intersections of all lines in `lines` array.
+    */
+    if (!dots || !storage || !lines) {
+        return -1;
+    }
     int i;
     int j;
     double x;
@@ -351,7 +359,7 @@ int get_all_intersections(int** dots,
             && is_in_rectangle(X, Y, x, y)) {
                 int current_index = in_storage(storage, *dots_amount, x, y);
                 if (current_index == -1) {
-                    // Точки в массиве нет, добавляем ее.
+                    // This point is not in dots. Add it to `dots`.
                     dots[i][*dots_amount] = 1;
                     dots[j][*dots_amount] = 1;
                     storage[*dots_amount][0] = x;
@@ -365,10 +373,20 @@ int get_all_intersections(int** dots,
             }
         }
     }
+    return 1;
 }
 
 
 int main(void) {
+    /*
+        Algorithm:
+        1. Put input data about lines in `lines` array.
+        2. Intersect all lines and put intersection point to `dots` array.
+        3. Sort `dots` array.
+        4. Build adjacency matrix of given graph using `dots` array.
+        5. Count number of triangles in adjacency matrix.
+        PROFIT!
+    */
     int i;
     double X;
     double Y;
@@ -395,12 +413,12 @@ int main(void) {
     int dots_amount = 0;
     get_all_intersections(dots, storage, lines, total_lines, X, Y, &dots_amount);
     free_matrix_double(lines, total_lines);
-    // Сделали массив, показывающий какие точки лежат на каких прямых.
+    // We made `dots` array, which shows which points lie on which line.
     quick_sort(storage, dots, total_lines, 0, dots_amount - 1);
     free_matrix_double(storage, MAX_DOTS);
     Bitset** adjacency_matrix = allocate_bitsets_array(dots_amount);
     build_adjacency(adjacency_matrix, dots, dots_amount, total_lines);
-    printf("%d", find_3_cycles(adjacency_matrix, dots_amount));
+    printf("%d", find_triangles(adjacency_matrix, dots_amount));
     free_matrix_int(dots, total_lines);
     free_bitsets_int(adjacency_matrix, dots_amount);
     return 0;
