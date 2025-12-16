@@ -2,7 +2,31 @@
 #include <stdlib.h>
 
 
-#define CHUNK_SIZE (8 * sizeof(unsigned long long))
+#define CHUNK_SIZE (8 * sizeof(unsigned long))
+
+
+typedef struct Bitset {
+    int size;
+    unsigned long* array;
+} Bitset;
+
+
+Bitset* allocate_bitset(int size) {
+    Bitset* bitset = malloc(sizeof(Bitset));
+    bitset->size = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    bitset->array = calloc(bitset->size, sizeof(unsigned long));
+    return bitset;
+}
+
+
+Bitset** allocate_bitsets_array(int size) {
+    Bitset** matrix = calloc(size, sizeof(Bitset*));
+    int i;
+    for (i = 0; i < size; i++) {
+        matrix[i] = allocate_bitset(size);
+    }
+    return matrix;
+}
 
 
 char** allocate_matrix(int size) {
@@ -15,23 +39,29 @@ char** allocate_matrix(int size) {
 }
 
 
-unsigned long long check_bit(unsigned long long number, int bit_index) {
-    return number & 1ULL << (bit_index % CHUNK_SIZE);
+int check_bit(Bitset* bitset, int bit_index) {
+    if (bitset->array[bit_index / CHUNK_SIZE] & 1ULL << (bit_index % CHUNK_SIZE)) {
+        return 1;
+    }
+    return 0;
 }
 
-int set_bit(unsigned long long* number, int bit_index) {
-    /*
-    1ULL - unsigned long long размером CHUNK_SIZE бита, значение: 1.
-    Выглядит так: 000...(63 нуля)...0001
-    Делаем побитовый сдвиг влево единицы на остаток при делении индекса j+1 на CHUNK_SIZE.
-    Получаем смещение в числе которое выглядит так: 000000100..((j+1)%CHUNK_SIZE нулей)..00
-    Делаем побитовое или для строки смежности i-й вершины и этого сдвига,
-    чтобы вершина j+1 в i-й строке матрицы смежности стала единицей.
-    */
-    if (!number) {
+
+void set_bit(Bitset* bitset, int bit_index) {
+    bitset->array[bit_index / CHUNK_SIZE] |= 1ULL << (bit_index % CHUNK_SIZE);
+}
+
+
+int free_bitsets_int(Bitset** bitsets, int size) {
+    if (!bitsets) {
         return -1;
     }
-    *number |= 1ULL << (bit_index % CHUNK_SIZE);
+    int i;
+    for (i = 0; i < size; i++) {
+        free(bitsets[i]->array);
+        free(bitsets[i]);
+    }
+    free(bitsets);
     return 1;
 }
 
@@ -55,12 +85,8 @@ int main(void) {
     int k;
     int answer = 1;
     int numbers = (N + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    unsigned long long** red_reached = malloc(N * sizeof(unsigned long long*));
-    unsigned long long** blue_reached = malloc(N * sizeof(unsigned long long*));
-    for (i = 0; i < N; i++) {
-        red_reached[i] = calloc(numbers, sizeof(unsigned long long));
-        blue_reached[i] = calloc(numbers, sizeof(unsigned long long));
-    }
+    Bitset** red_reached = allocate_bitsets_array(N);
+    Bitset** blue_reached = allocate_bitsets_array(N);
     for (i = 0; i < N - 1; i++) {
         scanf("%s", connections[i] + i);
     }
@@ -73,9 +99,9 @@ int main(void) {
         */
         for (j = i; j < N; j++) {
             if (connections[i][j] == 'R') {
-                set_bit(&red_reached[i][(j + 1) / CHUNK_SIZE], j + 1);
+                set_bit(red_reached[i], j + 1);
                 for (k = 0; k < numbers; k++) {
-                    red_reached[i][k] |= red_reached[(j + 1)][k];
+                    red_reached[i]->array[k] |= red_reached[(j + 1)]->array[k];
                     /*
                     Есть два числа, с ребрами в битах. Например:
                     i = 0110...
@@ -88,9 +114,9 @@ int main(void) {
                     */
                 }
             } else if (connections[i][j] == 'B') {
-                set_bit(&blue_reached[i][(j + 1) / CHUNK_SIZE], j + 1);
+                set_bit(blue_reached[i], j + 1);
                 for (k = 0; k < numbers; k++) {
-                    blue_reached[i][k] |= blue_reached[(j + 1)][k];
+                    blue_reached[i]->array[k] |= blue_reached[(j + 1)]->array[k];
                 }
             }
         }
@@ -101,7 +127,7 @@ int main(void) {
             Если вышло, что путь из вершины A в вершину B есть и в синей и в красной матрице,
             значит раскраска стрелок не однотонная.
             */
-            if (red_reached[i][k] & blue_reached[i][k]) {
+            if (red_reached[i]->array[k] & blue_reached[i]->array[k]) {
                 // Пример: 1010111 & 0011010 = 0010010
                 answer = 0;
             }
@@ -118,11 +144,7 @@ int main(void) {
         free(connections[i]);
     }
     free(connections);
-    for (i = 0; i < N; i++) {
-        free(red_reached[i]);
-        free(blue_reached[i]);
-    }
-    free(red_reached);
-    free(blue_reached);
+    free_bitsets_int(red_reached, N);
+    free_bitsets_int(blue_reached, N);
     return 0;
 }

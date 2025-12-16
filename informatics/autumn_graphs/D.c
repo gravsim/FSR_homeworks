@@ -123,9 +123,9 @@ int matrix_multiply(int** matrix1, int** matrix2, int** result, int size1, int s
     int j;
     int k;
     for (i = 0; i < size1; i++) {
-        for (j = 0; j < size2; j++) {
-            for (k = 0; k < size1; k++) {
-                result[i][j] += matrix1[i][k] * matrix2[k][j];
+        for (j = 0; j < size1; j++) {
+            for (k = 0; k < size2; k++) {
+                result[i][k] += matrix1[i][j] * matrix2[j][k];
             }
         }
     }
@@ -301,7 +301,7 @@ int main(void) {
     }
     add_rectangle_sides(lines, X, Y);
     for (i = 4; i < total_lines; i++) {
-        scanf("%lf %lf %lf", &lines[i][0], &lines[i][1], &lines[i][2]);
+        scanf("%lf %lf %lf", lines[i], lines[i] + 1, lines[i] + 2);
     }
     int dots_amount = 0;
     get_all_intersections(dots, storage, lines, total_lines, X, Y, &dots_amount);

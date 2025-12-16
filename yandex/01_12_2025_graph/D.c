@@ -2,33 +2,47 @@
 #include <stdlib.h>
 
 
-#define CHUNK_SIZE (8 * sizeof(unsigned long long))
+#define CHUNK_SIZE (8 * sizeof(unsigned long))
 
 
-unsigned long long** allocate_matrix(int size, int numbers) {
-    unsigned long long** matrix = calloc(size, sizeof(unsigned long long*));
+typedef struct Bitset {
+    int numbers;
+    unsigned long* array;
+} Bitset;
+
+
+Bitset* allocate_bitset(int size) {
+    Bitset* bitset = malloc(sizeof(Bitset));
+    bitset->numbers = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    bitset->array = calloc(bitset->numbers, sizeof(unsigned long));
+    return bitset;
+}
+
+
+Bitset** allocate_matrix(int size) {
+    Bitset** matrix = calloc(size, sizeof(Bitset*));
     int i;
     for (i = 0; i < size; i++) {
-        matrix[i] = calloc(numbers, sizeof(unsigned long long));
+        matrix[i] = allocate_bitset(size);
     }
     return matrix;
 }
 
 
-unsigned long long check_bit(unsigned long long number, int bit_index) {
-    if (number & 1ULL << (bit_index % CHUNK_SIZE)) {
+int check_bit(Bitset* bitset, int bit_index) {
+    if (bitset->array[bit_index / CHUNK_SIZE] & 1ULL << (bit_index % CHUNK_SIZE)) {
         return 1;
     }
     return 0;
 }
 
 
-void set_bit(unsigned long long* number, int bit_index) {
-    *number |= 1ULL << (bit_index % CHUNK_SIZE);
+void set_bit(Bitset* bitset, int bit_index) {
+    bitset->array[bit_index / CHUNK_SIZE] |= 1ULL << (bit_index % CHUNK_SIZE);
 }
 
 
-int DFS_recursive(unsigned long long** connections,
+int DFS_recursive(Bitset** connections,
                     int* colors,
                     int current,
                     int N) {
@@ -38,8 +52,8 @@ int DFS_recursive(unsigned long long** connections,
     colors[current] = 1;
     int i;
     for (i = 0; i < N; i++) {
-        if (check_bit(connections[current][i / CHUNK_SIZE], i)
-            && check_bit(connections[current][i / CHUNK_SIZE], i) != check_bit(connections[i][current / CHUNK_SIZE], current)) {
+        if (check_bit(connections[current], i)
+            && check_bit(connections[current], i) != check_bit(connections[i], current)) {
             // Второе условие проверяет, что нет прохода по одному
             // и тому же ребру, чтобы цикл был простой
             if (colors[i] == 1 ||
@@ -53,7 +67,7 @@ int DFS_recursive(unsigned long long** connections,
 }
 
 
-int check_cycles(unsigned long long** connections, int V) {
+int check_cycles(Bitset** connections, int V) {
     int i;
     int* colors = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
@@ -75,10 +89,9 @@ int main(void) {
     int V;
     int E;
     scanf("%d %d", &V, &E);
-    int numbers = (V + CHUNK_SIZE - 1) / CHUNK_SIZE;
     int i;
     int j;
-    unsigned long long** connections = allocate_matrix(V, numbers);
+    Bitset** connections = allocate_matrix(V);
     int* borders = calloc(V + 1, sizeof(int));
     int* vertices = calloc(E, sizeof(int));
     int* weights = calloc(E, sizeof(int));
@@ -94,7 +107,7 @@ int main(void) {
     }
     for (i = 0; i < V; i++) {
         for (j = borders[i]; j < borders[i + 1]; j++) {
-            set_bit(&connections[i][vertices[j] / CHUNK_SIZE], vertices[j]);
+            set_bit(connections[i], vertices[j]);
         }
     }
     if (check_cycles(connections, V)) {
