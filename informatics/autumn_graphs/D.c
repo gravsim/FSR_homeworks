@@ -4,15 +4,13 @@
 #include <limits.h>
 
 
-#define MAX_DOTS 1000
 #define DOUBLE_MAX 1e20
 
 
-void swap_double(double* a, double* b) {
-    double tmp = *a;
-    *a = *b;
-    *b = tmp;
+int equal(double a, double b) {
+    return fabs(a - b) < 1e-10;
 }
+
 
 void swap_int(int* a, int* b) {
     int tmp = *a;
@@ -28,6 +26,14 @@ void swap_double_pointers(double** a, double** b) {
 }
 
 
+
+int is_smaller(double a[2], double b[2]) {
+    if (!equal(a[0],b[0])) return a[0] < b[0];
+    if (!equal(a[1],b[1])) return a[1] < b[1];
+    return 0;
+}
+
+
 void quick_sort(double** main_array, int** side_array, int size, int down, int up) {
     /*
          Слегка измененный QuickSort.
@@ -38,15 +44,15 @@ void quick_sort(double** main_array, int** side_array, int size, int down, int u
     if (down >= up) {
         return;
     }
-    double pivot = main_array[(up + down) / 2][0];
+    double pivot[2] = {main_array[(up + down) / 2][0], main_array[(up + down) / 2][1]};
     int left = down;
     int right = up;
     int i;
     while (left <= right) {
-        while (main_array[left][0] < pivot) {
+        while (is_smaller(main_array[left], pivot)) {
             left++;
         }
-        while (pivot < main_array[right][0]) {
+        while (is_smaller(pivot, main_array[right])) {
             right--;
         }
         if (left <= right) {
@@ -60,11 +66,6 @@ void quick_sort(double** main_array, int** side_array, int size, int down, int u
     }
     quick_sort(main_array, side_array, size, down, right);
     quick_sort(main_array, side_array, size, left, up);
-}
-
-
-int equal(double a, double b) {
-    return fabs(a - b) < 1e-10;
 }
 
 
@@ -115,6 +116,9 @@ int in_storage(double** storage, int size, double x, double y) {
 
 
 int matrix_multiply(int** matrix1, int** matrix2, int** result, int size1, int size2) {
+    if (!matrix1 || !matrix2 || !result) {
+        return -1;
+    }
     int i;
     int j;
     int k;
@@ -125,6 +129,7 @@ int matrix_multiply(int** matrix1, int** matrix2, int** result, int size1, int s
             }
         }
     }
+    return 1;
 }
 
 
@@ -138,7 +143,20 @@ int** allocate_matrix(int size) {
 }
 
 
-int free_matrix(int** matrix, int size) {
+int free_matrix_int(int** matrix, int size) {
+    if (!matrix) {
+        return -1;
+    }
+    int i;
+    for (i = 0; i < size; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+    return 1;
+}
+
+
+int free_matrix_double(double** matrix, int size) {
     if (!matrix) {
         return -1;
     }
@@ -161,28 +179,10 @@ int trace(int** matrix, int size) {
 }
 
 
-int main(void) {
-    int i;
-    int j;
-    double X;
-    double Y;
-    int lines_amount;
-    scanf("%lf %lf %d", &X, &Y, &lines_amount);
-    int total_lines = lines_amount + 4;
-    int** dots = calloc(total_lines, sizeof(int*));
-    double** storage = calloc(MAX_DOTS, sizeof(double*));
-    for (i = 0; i < MAX_DOTS; i++) {
-        storage[i] = calloc(2, sizeof(double));
-        storage[i][0] = DOUBLE_MAX;
-        storage[i][1] = DOUBLE_MAX;
+int add_rectangle_sides(double** lines, double X, double Y) {
+    if (!lines) {
+        return -1;
     }
-    double** lines = calloc(total_lines, sizeof(double*));
-    for (i = 0; i < total_lines; i++) {
-        lines[i] = calloc(3, sizeof(double));
-        dots[i] = calloc(MAX_DOTS, sizeof(int));
-    }
-    double x;
-    double y;
     lines[0][0] = 1.0;
     lines[0][1] = 0.0;
     lines[0][2] = 0.0;
@@ -198,36 +198,16 @@ int main(void) {
     lines[3][0] = 0.0;
     lines[3][1] = -1.0;
     lines[3][2] = Y;
-    for (i = 4; i < total_lines; i++) {
-        scanf("%lf %lf %lf", &lines[i][0], &lines[i][1], &lines[i][2]);
+    return 1;
+}
+
+
+int build_adjacency(int** adjacency_matrix, int** dots,  int dots_amount, int total_lines) {
+    if (!adjacency_matrix || !dots) {
+        return -1;
     }
-    int dots_amount = 0;
-    for (i = 0; i < total_lines; i++) {
-        for (j = i + 1; j < total_lines; j++) {
-            if (find_intersection(lines[i], lines[j], &x, &y)
-                && is_in_rectangle(X, Y, x, y)) {
-                int current_index = in_storage(storage, dots_amount, x, y);
-                if (current_index == -1) {
-                    // Точки в массиве нет, добавляем ее.
-                    dots[i][dots_amount] = 1;
-                    dots[j][dots_amount] = 1;
-                    storage[dots_amount][0] = x;
-                    storage[dots_amount][1] = y;
-                    dots_amount++;
-                } else {
-                    // Точка уже есть в массиве
-                    dots[i][current_index] = 1;
-                    dots[j][current_index] = 1;
-                }
-            }
-        }
-    }
-    // Сделали массив, показывающий какие точки лежат на каких прямых.
-    quick_sort(storage, dots, total_lines, 0, dots_amount - 1);
-    int** connections = calloc(dots_amount, sizeof(int*));
-    for (i = 0; i < dots_amount; i++) {
-        connections[i] = calloc(dots_amount, sizeof(int));
-    }
+    int i;
+    int j;
     int k;
     for (i = 0; i < dots_amount; i++) {
         for (j = 0; j < total_lines; j++) {
@@ -237,34 +217,102 @@ int main(void) {
                     k++;
                 }
                 if (k < dots_amount && dots[j][k]) {
-                    connections[i][k] = 1;
+                    adjacency_matrix[i][k] = 1;
                 }
                 k = i - 1;
                 while (k >= 0 && !dots[j][k]) {
                     k--;
                 }
                 if (k >= 0 && dots[j][k]) {
-                    connections[i][k] = 1;
+                    adjacency_matrix[i][k] = 1;
                 }
             }
         }
     }
+    return 1;
+}
+
+
+int find_3_cycles(int** adjacency_matrix, int dots_amount) {
+    // Using theorem from the internet
     int** square = allocate_matrix(dots_amount);
     int** cube = allocate_matrix(dots_amount);
-    matrix_multiply(connections, connections, square, dots_amount, dots_amount);
-    matrix_multiply(square, connections, cube, dots_amount, dots_amount);
-    printf("%d", trace(cube, dots_amount) / 6);
+    matrix_multiply(adjacency_matrix, adjacency_matrix, square, dots_amount, dots_amount);
+    matrix_multiply(square, adjacency_matrix, cube, dots_amount, dots_amount);
+    int answer = trace(cube, dots_amount) / 6;
+    free_matrix_int(square, dots_amount);
+    free_matrix_int(cube, dots_amount);
+    return answer;
+}
+
+
+int get_all_intersections(int** dots,
+                            double** storage,
+                            double** lines,
+                            int total_lines,
+                            double X,
+                            double Y, int* dots_amount) {
+    int i;
+    int j;
+    double x;
+    double y;
     for (i = 0; i < total_lines; i++) {
-        free(lines[i]);
-        free(dots[i]);
+        for (j = i + 1; j < total_lines; j++) {
+            if (find_intersection(lines[i], lines[j], &x, &y)
+            && is_in_rectangle(X, Y, x, y)) {
+                int current_index = in_storage(storage, *dots_amount, x, y);
+                if (current_index == -1) {
+                    // Точки в массиве нет, добавляем ее.
+                    dots[i][*dots_amount] = 1;
+                    dots[j][*dots_amount] = 1;
+                    storage[*dots_amount][0] = x;
+                    storage[*dots_amount][1] = y;
+                    (*dots_amount)++;
+                } else {
+                    // This point already in dots
+                    dots[i][current_index] = 1;
+                    dots[j][current_index] = 1;
+                }
+            }
+        }
     }
+}
+
+
+int main(void) {
+    int i;
+    double X;
+    double Y;
+    int lines_amount;
+    scanf("%lf %lf %d", &X, &Y, &lines_amount);
+    int total_lines = lines_amount + 4;
+    int MAX_DOTS = total_lines * (total_lines - 1) / 2;
+    int** dots = calloc(total_lines, sizeof(int*));
+    double** storage = calloc(MAX_DOTS, sizeof(double*));
     for (i = 0; i < MAX_DOTS; i++) {
-        free(storage[i]);
+        storage[i] = calloc(2, sizeof(double));
+        storage[i][0] = DOUBLE_MAX;
+        storage[i][1] = DOUBLE_MAX;
     }
-    free_matrix(square, dots_amount);
-    free_matrix(cube, dots_amount);
-    free(lines);
-    free(dots);
-    free(storage);
+    double** lines = calloc(total_lines, sizeof(double*));
+    for (i = 0; i < total_lines; i++) {
+        lines[i] = calloc(3, sizeof(double));
+        dots[i] = calloc(MAX_DOTS, sizeof(int));
+    }
+    add_rectangle_sides(lines, X, Y);
+    for (i = 4; i < total_lines; i++) {
+        scanf("%lf %lf %lf", &lines[i][0], &lines[i][1], &lines[i][2]);
+    }
+    int dots_amount = 0;
+    get_all_intersections(dots, storage, lines, total_lines, X, Y, &dots_amount);
+    free_matrix_double(lines, total_lines);
+    // Сделали массив, показывающий какие точки лежат на каких прямых.
+    quick_sort(storage, dots, total_lines, 0, dots_amount - 1);
+    free_matrix_double(storage, MAX_DOTS);
+    int** adjacency_matrix = allocate_matrix(dots_amount);
+    build_adjacency(adjacency_matrix, dots, dots_amount, total_lines);
+    printf("%d", find_3_cycles(adjacency_matrix, dots_amount));
+    free_matrix_int(dots, total_lines);
+    free_matrix_int(adjacency_matrix, dots_amount);
     return 0;
 }
