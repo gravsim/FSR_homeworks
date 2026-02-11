@@ -43,7 +43,7 @@ int** set_adjacency_matrix(int N, int M) {
 }
 
 
-int Prim(int N, int** adjacency_matrix) {
+int get_MST_weight_Prim(int N, int** adjacency_matrix) {
     /*
         In this program array `previous` is not used. I will keep it
         if in future I will need to construct gotten tree.
@@ -97,6 +97,6 @@ int main(void) {
     int M;
     scanf("%d %d", &N, &M);
     int** adjacency_matrix = set_adjacency_matrix(N, M);
-    printf("%d", Prim(N, adjacency_matrix));
+    printf("%d", get_MST_weight_Prim(N, adjacency_matrix));
     return 0;
 }
