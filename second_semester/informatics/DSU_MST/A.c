@@ -10,7 +10,7 @@ int get_minimal_weight(int* distances, int* visited, int N) {
     }
     int i = 0;
     int minimum = MAX_WEIGHT;
-    int min_index = 0;
+    int min_index = -1;
     for (i = 0; i < N; i++) {
         if (!visited[i] && distances[i] < minimum) {
             minimum = distances[i];
@@ -43,13 +43,17 @@ int** set_adjacency_matrix(int N, int M) {
 }
 
 
-int Prim(int N, int M, int** adjacency_matrix) {
+int Prim(int N, int** adjacency_matrix) {
+    /*
+        In this program array `previous` is not used. I will keep it
+        if in future I will need to construct gotten tree.
+    */
     if (!adjacency_matrix) {
         return -1;
     }
     int i;
     int w;
-    int visited_amount = 1;
+    int visited_amount;
     int answer = 0;
     int v;
     int* previous = calloc(N, sizeof(int));
@@ -62,20 +66,17 @@ int Prim(int N, int M, int** adjacency_matrix) {
     }
     distances[0] = 0;
     int* visited = calloc(N, sizeof(int));
-    visited[0] = 1;
-    while (visited_amount < M) {
-        for (i = 0; i < N; i++) {
-            v = get_minimal_weight(distances, visited, N);
-            for (w = 0; w < N; w++) {
-                if (adjacency_matrix[v][w]
-                    && !visited[w]
-                    && adjacency_matrix[v][w] < distances[w]) {
-                    previous[w] = v;
-                    distances[w] = adjacency_matrix[v][w];
-                    }
+    for (visited_amount = 1; visited_amount < N; visited_amount++) {
+        v = get_minimal_weight(distances, visited, N);
+        visited[v] = 1;
+        for (w = 0; w < N; w++) {
+            if (adjacency_matrix[v][w]
+            && !visited[w]
+            && adjacency_matrix[v][w] < distances[w]) {
+                previous[w] = v;
+                distances[w] = adjacency_matrix[v][w];
             }
         }
-        visited_amount++;
     }
     for (i = 0; i < N; i++) {
         answer += distances[i];
@@ -96,6 +97,6 @@ int main(void) {
     int M;
     scanf("%d %d", &N, &M);
     int** adjacency_matrix = set_adjacency_matrix(N, M);
-    printf("%d", Prim(N, M, adjacency_matrix));
+    printf("%d", Prim(N, adjacency_matrix));
     return 0;
 }
