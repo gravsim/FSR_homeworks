@@ -2,43 +2,48 @@
 #include <stdlib.h>
 
 
-int** set_adjacency_matrix(int n) {
-    int i;
-    int** adjacency_matrix = calloc(n, sizeof(int*));
-    for (i = 0; i < n; i++) {
-        adjacency_matrix[i] = calloc(n, sizeof(int));
-    }
-    return adjacency_matrix;
+typedef struct DSU_node {
+    struct DSU_node* parent;
+    int value;
+    int rang;
+} DSU_node;
+
+
+DSU_node* make_set(int value) {
+    DSU_node* tmp = malloc(sizeof(DSU_node));
+    tmp->value = value;
+    tmp->parent = tmp;
+    tmp->rang = 1;
+    return tmp;
 }
 
 
-int BFS(int** adjacency_matrix, int n, int source) {
-    if (!adjacency_matrix) {
-        return -1;
+void swap_nodes(DSU_node* node1, DSU_node* node2) {
+    DSU_node tmp = *node1;
+    *node1 = *node2;
+    *node2 = tmp;
+}
+
+
+DSU_node* find_set(DSU_node* node) {
+    if (node->parent == node) {
+        return node;
     }
-    int* visited = calloc(n, sizeof(int));
-    int* queue = calloc(n, sizeof(int));
-    int front = 0;
-    int back = 0;
-    int weight = 0;
-    int current;
-    int i;
-    visited[source] = 1;
-    queue[back++] = source;
-    while (front < back) {
-        current = queue[front];
-        for (i = 0; i < n; i++) {
-            if (adjacency_matrix[current][i] && !visited[i]) {
-                visited[i] = 1;
-                queue[back++] = i;
-                weight += adjacency_matrix[current][i];
-            }
-        }
-        front++;
+    return node->parent = find_set(node->parent);
+}
+
+
+DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
+    node1 = find_set(node1);
+    node2 = find_set(node2);
+    if (node1->rang < node2->rang) {
+        swap_nodes(node1, node2);
     }
-    free(visited);
-    free(queue);
-    return weight;
+    node2->parent = node1;
+    if (node1->rang == node2->rang) {
+        node1->rang++;
+    }
+    return node1;
 }
 
 
@@ -51,15 +56,14 @@ int main(void) {
     int y;
     int w;
     scanf("%d %d", &n, &m);
-    int** adjacency_matrix = set_adjacency_matrix(n);
     for (i = 0; i < m; i++) {
-        scanf("%d ", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
                 scanf("%d %d %d", &x, &y, &w);
                 x--;
                 y--;
-                adjacency_matrix[x][y] += w;
+                make_set(w);
                 break;
             case 2:
                 scanf("%d", &x);

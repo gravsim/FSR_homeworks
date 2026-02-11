@@ -56,57 +56,33 @@ DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
 }
 
 
-int get_MST_weight_Prim(int N, int** adjacency_matrix) {
-    /*
-        In this program array `previous` is not used. I will keep it
-        if in future I will need to construct gotten tree.
-    */
+int BFS(int** adjacency_matrix, int n, int source) {
     if (!adjacency_matrix) {
         return -1;
     }
+    int* visited = calloc(n, sizeof(int));
+    int* queue = calloc(n, sizeof(int));
+    int front = 0;
+    int back = 0;
+    int weight = 0;
+    int current;
     int i;
-    int w;
-    int visited_amount;
-    int answer = 0;
-    int v;
-    int* previous = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
-        previous[i] = -1;
-    }
-    int* distances = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
-        distances[i] = MAX_WEIGHT;
-    }
-    distances[0] = 0;
-    int* visited = calloc(N, sizeof(int));
-    for (visited_amount = 1; visited_amount < N; visited_amount++) {
-        v = get_minimal_weight(distances, visited, N);
-        visited[v] = 1;
-        for (w = 0; w < N; w++) {
-            if (adjacency_matrix[v][w]
-            && !visited[w]
-            && adjacency_matrix[v][w] < distances[w]) {
-                previous[w] = v;
-                distances[w] = adjacency_matrix[v][w];
+    visited[source] = 1;
+    queue[back++] = source;
+    while (front < back) {
+        current = queue[front];
+        for (i = 0; i < n; i++) {
+            if (adjacency_matrix[current][i] && !visited[i]) {
+                visited[i] = 1;
+                queue[back++] = i;
+                weight += adjacency_matrix[current][i];
             }
         }
+        front++;
     }
-    for (i = 0; i < N; i++) {
-        answer += distances[i];
-    }
-    free(distances);
     free(visited);
-    free(previous);
-    for (i = 0; i < N; i++) {
-        free(adjacency_matrix[i]);
-    }
-    free(adjacency_matrix);
-    return answer;
-}
-
-
-int BFS(int** adjacency_matrix) {
-
+    free(queue);
+    return weight;
 }
 
 
