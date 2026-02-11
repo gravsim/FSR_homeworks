@@ -1,4 +1,4 @@
-# FSR_programs
+# FSR_homeworks
 
 ### Коды к задачам на языке C факультета ФКИ. Bitch!
 
