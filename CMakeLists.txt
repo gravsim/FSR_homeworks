@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(FSR_programs)
+project(FSR_homeworks)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -8,5 +8,5 @@ set(CMAKE_C_FLAGS "-Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-s
 file(GLOB_RECURSE SRC_FILES
         "${CMAKE_SOURCE_DIR}/*.c"
 )
-add_executable(FSR_programs ${SRC_FILES}
+add_executable(FSR_homeworks ${SRC_FILES}
 )
