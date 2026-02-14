@@ -18,13 +18,6 @@ DSU_node* make_set(int sum) {
 }
 
 
-void swap_nodes(DSU_node* node1, DSU_node* node2) {
-    DSU_node tmp = *node1;
-    *node1 = *node2;
-    *node2 = tmp;
-}
-
-
 DSU_node* find_set(DSU_node* node) {
     if (node->parent == node) {
         return node;
@@ -39,8 +32,13 @@ DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
     }
     node1 = find_set(node1);
     node2 = find_set(node2);
+    if (node1 == node2) {
+        return node1;
+    }
     if (node1->rang < node2->rang) {
-        swap_nodes(node1, node2);
+        DSU_node* tmp = node1;
+        node1 = node2;
+        node2 = tmp;
     }
     node2->parent = node1;
     if (node1->rang == node2->rang) {
@@ -61,6 +59,9 @@ int main(void) {
     int w;
     scanf("%d %d", &n, &m);
     DSU_node** nodes = calloc(n, sizeof(DSU_node*));
+    for (i = 0; i < n; i++) {
+        nodes[i] = make_set(0);
+    }
     for (i = 0; i < m; i++) {
         scanf("%d", &command);
         switch (command) {
@@ -68,13 +69,12 @@ int main(void) {
                 scanf("%d %d %d", &x, &y, &w);
                 x--;
                 y--;
-                nodes[i] = make_set(w);
-                union_set(nodes[x], nodes[y]);
+                union_set(nodes[x], nodes[y])->sum += w;
                 break;
             case 2:
                 scanf("%d", &x);
                 x--;
-                printf("\n%d", find_set(nodes[x])->sum);
+                printf("%d\n", find_set(nodes[x])->sum);
                 break;
         }
     }
