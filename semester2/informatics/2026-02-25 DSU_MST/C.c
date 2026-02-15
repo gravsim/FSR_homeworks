@@ -27,7 +27,7 @@ DSU_node* find_set(DSU_node* node) {
 }
 
 
-DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
+DSU_node* union_set(DSU_node* node1, DSU_node* node2, double sum) {
     if (!node1 || !node2) {
         return NULL;
     }
@@ -45,7 +45,7 @@ DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
     if (node1->rang == node2->rang) {
         node1->rang++;
     }
-    node1->sum += node2->sum;
+    node1->sum += node2->sum + sum;
     return node1;
 }
 
@@ -98,17 +98,22 @@ void quick_sort(double* main_array, int** side_array, int size, int down, int up
 }
 
 
-double Kruskal(double* edges, int** incidences, int N, DSU_node** nodes, int* edges_amount) {
+int flatten_indices(int N, int i, int j) {
+    return i * (N - 1) - i * (i + 1) / 2 + j - 1;
+}
+
+
+double Kruskal(double* edges, int** incidences, int N, DSU_node** nodes, int components) {
     if (!edges || !incidences || !nodes) {
         return -1;
     }
     int i = 0;
     int E = N * (N - 1) / 2;
     quick_sort(edges, incidences, E, 0, E - 1);
-    while (*edges_amount < N - 1) {
+    while (components > 1) {
         if (find_set(nodes[incidences[i][0]]) != find_set(nodes[incidences[i][1]])) {
-            union_set(nodes[incidences[i][0]], nodes[incidences[i][1]])->sum += edges[i];
-            (*edges_amount)++;
+            union_set(nodes[incidences[i][0]], nodes[incidences[i][1]], edges[i]);
+            components--;
         }
         i++;
     }
@@ -128,6 +133,7 @@ int main(void) {
     int** positions = calloc(N, sizeof(int*));
     DSU_node** nodes = calloc(N, sizeof(DSU_node*));
     int E = N * (N - 1) / 2;
+    int components = N;
     double* edges = calloc(E, sizeof(double));
     int** incidences = calloc(E, sizeof(int*));
     for (i = 0; i < N; i++) {
@@ -155,9 +161,12 @@ int main(void) {
         scanf("%d %d", &x, &y);
         x--;
         y--;
-        union_set(nodes[x], nodes[y]);
+        if (find_set(nodes[x]) != find_set(nodes[y])) {
+            components--;
+        }
+        union_set(nodes[x], nodes[y], 0.0);
     }
-    printf("%.5lf", Kruskal(edges, incidences, N, nodes, &edges_amount));
+    printf("%.5lf", Kruskal(edges, incidences, N, nodes, components));
     for (i = 0; i < N; i++) {
         free(positions[i]);
         free(nodes[i]);
