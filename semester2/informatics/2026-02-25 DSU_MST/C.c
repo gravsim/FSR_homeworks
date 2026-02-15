@@ -27,7 +27,7 @@ DSU_node* find_set(DSU_node* node) {
 }
 
 
-DSU_node* union_set(DSU_node* node1, DSU_node* node2, double sum) {
+DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
     if (!node1 || !node2) {
         return NULL;
     }
@@ -45,16 +45,16 @@ DSU_node* union_set(DSU_node* node1, DSU_node* node2, double sum) {
     if (node1->rang == node2->rang) {
         node1->rang++;
     }
-    node1->sum += node2->sum + sum;
+    node1->sum += node2->sum;
     return node1;
 }
 
 
-int swap_int(int* a, int* b) {
+int swap_int(int** a, int** b) {
     if (!a || !b) {
         return -1;
     }
-    int tmp = *a;
+    int* tmp = *a;
     *a = *b;
     *b = tmp;
     return 1;
@@ -79,7 +79,6 @@ void quick_sort(double* main_array, int** side_array, int size, int down, int up
     double pivot = main_array[(up + down) / 2];
     int left = down;
     int right = up;
-    int i;
     while (left <= right) {
         while (main_array[left] < pivot) {
             left++;
@@ -89,9 +88,7 @@ void quick_sort(double* main_array, int** side_array, int size, int down, int up
         }
         if (left <= right) {
             swap_double(main_array + left, main_array + right);
-            for (i = 0; i < size; i++) {
-                swap_int(side_array[i] + left, side_array[i] + right);
-            }
+            swap_int(side_array + left, side_array + right);
             left++;
             right--;
         }
@@ -101,25 +98,20 @@ void quick_sort(double* main_array, int** side_array, int size, int down, int up
 }
 
 
-int flatten_indices(int N, int i, int j) {
-    return i * (N - 1) - i * (i + 1) / 2 + j - 1;
-}
-
-
 double Kruskal(double* edges, int** incidences, int N, DSU_node** nodes, int* edges_amount) {
     if (!edges || !incidences || !nodes) {
         return -1;
     }
     int i = 0;
-    quick_sort(edges, incidences, N * (N - 1) / 2, 0, N * (N - 1) / 2);
+    int E = N * (N - 1) / 2;
+    quick_sort(edges, incidences, E, 0, E - 1);
     while (*edges_amount < N - 1) {
         if (find_set(nodes[incidences[i][0]]) != find_set(nodes[incidences[i][1]])) {
-            union_set(nodes[incidences[i][0]], nodes[incidences[i][1]], edges[i]);
+            union_set(nodes[incidences[i][0]], nodes[incidences[i][1]])->sum += edges[i];
             (*edges_amount)++;
         }
         i++;
     }
-    printf("KRUSKAL DONE\n");
     return find_set(nodes[0])->sum;
 }
 
@@ -131,11 +123,12 @@ int main(void) {
     int j;
     int x;
     int y;
+    int index = 0;
     scanf("%d", &N);
     int** positions = calloc(N, sizeof(int*));
     DSU_node** nodes = calloc(N, sizeof(DSU_node*));
     int E = N * (N - 1) / 2;
-    double* edges = calloc(E, sizeof(double*));
+    double* edges = calloc(E, sizeof(double));
     int** incidences = calloc(E, sizeof(int*));
     for (i = 0; i < N; i++) {
         positions[i] = calloc(2, sizeof(int));
@@ -149,23 +142,28 @@ int main(void) {
     }
     for (i = 0; i < N - 1; i++) {
         for (j = i + 1; j < N; j++) {
-            edges[flatten_indices(N, i, j)] = sqrt(
+            edges[index] = sqrt(
                 pow(positions[i][0] - positions[j][0], 2)
                 + pow(positions[i][1] - positions[j][1], 2));
-            incidences[flatten_indices(N, i, j)][0] = i;
-            incidences[flatten_indices(N, i, j)][1] = j;
+            incidences[index][0] = i;
+            incidences[index][1] = j;
+            index++;
         }
     }
     scanf("%d", &edges_amount);
     for (i = 0; i < edges_amount; i++) {
         scanf("%d %d", &x, &y);
-        union_set(nodes[x], nodes[y], edges[flatten_indices(N, x, y)]);
+        x--;
+        y--;
+        union_set(nodes[x], nodes[y]);
     }
     printf("%.5lf", Kruskal(edges, incidences, N, nodes, &edges_amount));
     for (i = 0; i < N; i++) {
-        free(incidences[i]);
         free(positions[i]);
         free(nodes[i]);
+    }
+    for (i = 0; i < E; i++) {
+        free(incidences[i]);
     }
     free(edges);
     free(incidences);
