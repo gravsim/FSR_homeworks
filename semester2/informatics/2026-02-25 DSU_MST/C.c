@@ -3,25 +3,14 @@
 #include <math.h>
 
 
-
-int** set_adjacency_matrix(int N) {
-    int i;
-    int** adjacency_matrix = calloc(N, sizeof(int*));
-    for (i = 0; i < N; i++) {
-        adjacency_matrix[i] = calloc(N, sizeof(int));
-    }
-    return adjacency_matrix;
-}
-
-
 typedef struct DSU_node {
     struct DSU_node* parent;
-    int sum;
+    double sum;
     int rang;
 } DSU_node;
 
 
-DSU_node* make_set(int sum) {
+DSU_node* make_set(double sum) {
     DSU_node* tmp = malloc(sizeof(DSU_node));
     tmp->sum = sum;
     tmp->parent = tmp;
@@ -38,7 +27,7 @@ DSU_node* find_set(DSU_node* node) {
 }
 
 
-DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
+DSU_node* union_set(DSU_node* node1, DSU_node* node2, double sum) {
     if (!node1 || !node2) {
         return NULL;
     }
@@ -56,174 +45,131 @@ DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
     if (node1->rang == node2->rang) {
         node1->rang++;
     }
-    node1->sum += node2->sum;
+    node1->sum += node2->sum + sum;
     return node1;
 }
 
 
-typedef struct Heap {
-    int size;
-    int capacity;
-    double* values;
-} Heap;
+int swap_int(int* a, int* b) {
+    if (!a || !b) {
+        return -1;
+    }
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 1;
+}
 
 
-int swap(double* a, double* b) {
+int swap_double(double* a, double* b) {
+    if (!a || !b) {
+        return -1;
+    }
     double tmp = *a;
     *a = *b;
     *b = tmp;
-    return 0;
-}
-
-
-int is_full(Heap* heap) {
-    return heap->size == heap->capacity;
-}
-
-
-int expand(Heap* heap) {
-    if (!heap) {
-        return -1;
-    }
-    heap->capacity *= 2;
-    heap->values = (double*)realloc(heap->values, heap->capacity * sizeof(double));
     return 1;
 }
 
 
-int sift_up(Heap* heap, int index) {
-    if (!heap) {
-        return -1;
+void quick_sort(double* main_array, int** side_array, int size, int down, int up) {
+    if (down >= up) {
+        return;
     }
-    while (index > 0 && heap->values[index] < heap->values[(index - 1) / 2]) {
-        swap(&heap->values[index], &heap->values[(index - 1) / 2]);
-        index = (index - 1) / 2;
-    }
-    return 1;
-}
-
-
-int sift_down(Heap* heap, int index) {
-    int max_index = index;
-    if (2 * index + 2 < heap->size && heap->values[2 * index + 2] < heap->values[max_index]) {
-        max_index = 2 * index + 2;
-    }
-    if (2 * index + 1 < heap->size && heap->values[2 * index + 1] <= heap->values[max_index]) {
-        max_index = 2 * index + 1;
-    }
-    /*
-        Тут знак >=, т.к. при равенстве элементов по условию задачи,
-        нужно выбирать левого сына, который имеет индекс 2 * index + 1.
-    */
-    if (max_index != index) {
-        swap(&heap->values[index], &heap->values[max_index]);
-        return sift_down(heap, max_index);
-    }
-    return max_index;
-}
-
-
-int push(Heap* heap, int value) {
-    if (!heap) {
-        return -1;
-    }
-    if (is_full(heap)) {
-        expand(heap);
-    }
-    heap->values[heap->size] = value;
-    sift_up(heap, heap->size);
-    heap->size++;
-    return 1;
-}
-
-
-int print_heap(Heap* heap) {
-    if (!heap) {
-        return -1;
-    }
+    double pivot = main_array[(up + down) / 2];
+    int left = down;
+    int right = up;
     int i;
-    for (i = 0; i < heap->size; i++) {
-        printf("%lf ", heap->values[i]);
+    while (left <= right) {
+        while (main_array[left] < pivot) {
+            left++;
+        }
+        while (pivot < main_array[right]) {
+            right--;
+        }
+        if (left <= right) {
+            swap_double(main_array + left, main_array + right);
+            for (i = 0; i < size; i++) {
+                swap_int(side_array[i] + left, side_array[i] + right);
+            }
+            left++;
+            right--;
+        }
     }
-    return 1;
-}
-
-
-int decrease(Heap* heap, int index, int value) {
-    heap->values[index] -= value;
-    return sift_down(heap, index) + 1;
-}
-
-
-int init_heap(Heap** heap) {
-    if (!heap) {
-        return -1;
-    }
-    *heap = malloc(sizeof(Heap));
-    (*heap)->size = 0;
-    (*heap)->capacity = 5;
-    (*heap)->values = (double*)calloc((*heap)->capacity, sizeof(double));
-    return 1;
-}
-
-
-int forms_cycle(int* edges, int new_adge) {
-
-
+    quick_sort(main_array, side_array, size, down, right);
+    quick_sort(main_array, side_array, size, left, up);
 }
 
 
 int flatten_indices(int N, int i, int j) {
-    return i * (N - 1) - i * (i + 1) / 2 + j;
+    return i * (N - 1) - i * (i + 1) / 2 + j - 1;
 }
 
 
-int Kruskal(Heap* heap, int N, DSU_node** nodes) {
-    int edges_amount = 0;
-    int i;
-    int x;
-    int y;
-    while (edges_amount < N - 1) {
-        if (find_set(nodes[x]) != find_set(nodes[y])) {
-            union_set(nodes[x], nodes[y]);
-            edges_amount++;
-        }
-
+double Kruskal(double* edges, int** incidences, int N, DSU_node** nodes, int* edges_amount) {
+    if (!edges || !incidences || !nodes) {
+        return -1;
     }
-    return find_set(nodes[edges_amount])->sum;
+    int i = 0;
+    quick_sort(edges, incidences, N * (N - 1) / 2, 0, N * (N - 1) / 2);
+    while (*edges_amount < N - 1) {
+        if (find_set(nodes[incidences[i][0]]) != find_set(nodes[incidences[i][1]])) {
+            union_set(nodes[incidences[i][0]], nodes[incidences[i][1]], edges[i]);
+            (*edges_amount)++;
+        }
+        i++;
+    }
+    printf("KRUSKAL DONE\n");
+    return find_set(nodes[0])->sum;
 }
 
 
 int main(void) {
     int N;
-    int M;
+    int edges_amount;
     int i;
     int j;
+    int x;
+    int y;
     scanf("%d", &N);
-    Heap* heap;
-    init_heap(&heap);
-    int** adjacency_matrix = set_adjacency_matrix(N);
     int** positions = calloc(N, sizeof(int*));
     DSU_node** nodes = calloc(N, sizeof(DSU_node*));
-    double* edges = calloc(N * (N - 1) / 2, sizeof(int));
+    int E = N * (N - 1) / 2;
+    double* edges = calloc(E, sizeof(double*));
+    int** incidences = calloc(E, sizeof(int*));
     for (i = 0; i < N; i++) {
         positions[i] = calloc(2, sizeof(int));
         nodes[i] = make_set(0);
     }
+    for (i = 0; i < E; i++) {
+        incidences[i] = calloc(2, sizeof(int));
+    }
     for (i = 0; i < N; i++) {
         scanf("%d %d", positions[i], positions[i] + 1);
     }
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < N - 1; i++) {
         for (j = i + 1; j < N; j++) {
-            push(heap, sqrt(positions[i][0] ^ 2 - positions[j][1] ^ 2));
+            edges[flatten_indices(N, i, j)] = sqrt(
+                pow(positions[i][0] - positions[j][0], 2)
+                + pow(positions[i][1] - positions[j][1], 2));
+            incidences[flatten_indices(N, i, j)][0] = i;
+            incidences[flatten_indices(N, i, j)][1] = j;
         }
     }
-    printf("%d", Kruskal(edges, N, nodes));
-    scanf("%d", &M);
-    for (i = 0; i < M; i++) {
-        scanf("%d %d", positions[i], positions[i] + 1);
+    scanf("%d", &edges_amount);
+    for (i = 0; i < edges_amount; i++) {
+        scanf("%d %d", &x, &y);
+        union_set(nodes[x], nodes[y], edges[flatten_indices(N, x, y)]);
     }
-
-
+    printf("%.5lf", Kruskal(edges, incidences, N, nodes, &edges_amount));
+    for (i = 0; i < N; i++) {
+        free(incidences[i]);
+        free(positions[i]);
+        free(nodes[i]);
+    }
+    free(edges);
+    free(incidences);
+    free(positions);
+    free(nodes);
     return 0;
 }
