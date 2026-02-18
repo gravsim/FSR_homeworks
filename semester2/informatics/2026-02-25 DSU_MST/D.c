@@ -1,126 +1,158 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
-#define MAX_POWER 11
+#define MAX_WEIGHT 100
 
 
-int char2int(char number) {
-    return number - '0';
+int swap_int(int* a, int* b) {
+    if (!a || !b) {
+        return -1;
+    }
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 1;
 }
 
 
-int is_number(char number) {
-    return (number >= '0' && number <= '9');
-}
-
-
-int extract_multiplier(int* i, char* array) {
-    int multiplier = 0;
-    int sign = 1;
-    if (array[*i] == '-') {
-        sign = -1;
-        (*i)++;
-    } else if (array[*i] == '+') {
-        (*i)++;
+int get_minimal_weight(int* distances, int* visited, int V) {
+    if (!distances || !visited) {
+        return -1;
     }
-    if (array[*i] == 'x') {
-        return sign;
-    }
-    while (is_number(array[*i])) {
-        multiplier *= 10;
-        multiplier += char2int(array[*i]);
-        (*i)++;
-    }
-    return sign * multiplier;
-}
-
-
-int extract_power(int* i, char* array) {
-    int power = 0;
-    if (array[*i] == 'x') {
-        (*i)++;
-        if (array[*i] == '^') {
-            (*i)++;
-            while (is_number(array[*i])) {
-                power *= 10;
-                power += char2int(array[*i]);
-                (*i)++;
-            }
-        } else {
-            power = 1;
-        }
-    } else {
-        power = 0;
-    }
-    return power;
-}
-
-
-void read_polynomial(char* polynomial, int* multipliers) {
     int i = 0;
-    int power = 1;
-    int multiplier;
-    while (polynomial[i] != '\0') {
-        multiplier = extract_multiplier(&i, polynomial);
-        power = extract_power(&i, polynomial);
-        multipliers[power] = multiplier;
-    }
-}
-
-
-void get_multiplication(int* result, int* multipliers1, int* multipliers2) {
-    int i, j;
-    for (i = 0; i < MAX_POWER; i++) {
-        for (j = 0; j < MAX_POWER; j++) {
-            result[i + j] += multipliers1[i] * multipliers2[j];
+    int minimum = MAX_WEIGHT;
+    int min_index = -1;
+    for (i = 0; i < V; i++) {
+        if (!visited[i] && distances[i] < minimum) {
+            minimum = distances[i];
+            min_index = i;
         }
     }
+    return min_index;
 }
 
 
-void print_polynomial(int* polynomial) {
+int** set_adjacency_matrix(int V, int M, int** incidents) {
     int i;
-    int counter = 0;
-    for (i = 2 * MAX_POWER - 2; i >= 0; i--) {
-        if (polynomial[i] != 0) {
-            if (counter > 0 && polynomial[i] > 0) {
-                printf("+");
-            }
-            if (polynomial[i] != 1 || i == 0) {
-                if (polynomial[i] == -1) {
-                    printf("-");
-                    if (i == 0) {
-                        printf("1");
-                    }
-                } else {
-                    printf("%d", polynomial[i]);
-                }
-            }
-            if (i > 1) {
-                printf("x^%d", i);
-            } else if (i == 1) {
-                printf("x");
-            }
-            counter++;
+    int vertex1;
+    int vertex2;
+    int weight;
+    int** adjacency_matrix = calloc(V, sizeof(int*));
+    for (i = 0; i < V; i++) {
+        adjacency_matrix[i] = calloc(V, sizeof(int));
+    }
+    for (i = 0; i < M; i++) {
+        vertex1 = incidents[i][0];
+        vertex2 = incidents[i][1];
+        weight = incidents[i][2];
+        if (adjacency_matrix[vertex1][vertex2] == 0 || weight < adjacency_matrix[vertex1][vertex2]) {
+            adjacency_matrix[vertex1][vertex2] = weight;
+            adjacency_matrix[vertex2][vertex1] = weight;
         }
     }
-    if (counter == 0) {
-        printf("0");
+    return adjacency_matrix;
+}
+
+
+int free_adjacency_matrix(int** adjacency_matrix, int V) {
+    if (!adjacency_matrix) {
+        return -1;
     }
+    int i;
+    for (i = 0; i < V; i++) {
+        free(adjacency_matrix[i]);
+    }
+    free(adjacency_matrix);
+    return 1;
+}
+
+
+int Prim(int V, int** adjacency_matrix, int* distances) {
+    /*
+        In this program array `previous` is not used. I will keep it
+        if in future I will need to construct gotten tree.
+    */
+    if (!adjacency_matrix) {
+        return -1;
+    }
+    int i;
+    int w;
+    int visited_amount;
+    int answer = 0;
+    int v;
+    int* previous = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
+        previous[i] = -1;
+    }
+    for (i = 0; i < V; i++) {
+        distances[i] = MAX_WEIGHT;
+    }
+    distances[0] = 0;
+    int* visited = calloc(V, sizeof(int));
+    for (visited_amount = 1; visited_amount < V; visited_amount++) {
+        v = get_minimal_weight(distances, visited, V);
+        visited[v] = 1;
+        for (w = 0; w < V; w++) {
+            if (adjacency_matrix[v][w]
+            && !visited[w]
+            && adjacency_matrix[v][w] < distances[w]) {
+                previous[w] = v;
+                distances[w] = adjacency_matrix[v][w];
+            }
+        }
+    }
+    for (i = 0; i < V; i++) {
+        answer += distances[i];
+    }
+    free(distances);
+    free(visited);
+    for (i = 0; i < V; i++) {
+        free(adjacency_matrix[i]);
+    }
+    free(adjacency_matrix);
+    return answer;
 }
 
 
 int main(void) {
-    char polynomial1[100];
-    char polynomial2[100];
-    scanf("%s", polynomial1);
-    scanf("%s", polynomial2);
-    int multipliers1[MAX_POWER] = {0};
-    int multipliers2[MAX_POWER] = {0};
-    read_polynomial(polynomial1, multipliers1);
-    read_polynomial(polynomial2, multipliers2);
-    int result[MAX_POWER * 2] = {0};
-    get_multiplication(result, multipliers1, multipliers2);
-    print_polynomial(result);
+    int V;
+    int E;
+    int i;
+    scanf("%d %d", &V, &E);
+    if (E < V - 1) {
+        printf("Impossible");
+        return 0;
+    }
+    int* distances = calloc(V, sizeof(int));
+
+    int** incidences = calloc(E, sizeof(int*));
+    int edge1;
+    int edge2;
+    int weight;
+    for (i = 0; i < E; i++) {
+        incidences[i] = calloc(3, sizeof(int));
+        scanf("%d %d %d", incidences[i], incidences[i] + 1, incidences[i] + 2);
+        incidences[i][0]--;
+        incidences[i][1]--;
+    }
+    int** adjacency_matrix = set_adjacency_matrix(V, E, incidences);
+    int max_price;
+    int min_price;
+    int max_length;
+    int min_length;
+    scanf("%d %d %d %d", &max_price, &max_length, &min_price, &min_length);
+    int is_swapped = 0;
+    if (max_price < min_price) {
+        swap_int(&max_price, &min_price);
+        swap_int(&max_length, &min_length);
+        is_swapped = 1;
+    }
+    printf("%d", Prim(V, adjacency_matrix, distances));
+    for (i = 0; i < V - 1; i++) {
+
+    }
+    free_adjacency_matrix(adjacency_matrix, V);
+    free(distances);
     return 0;
 }

@@ -4,14 +4,14 @@
 #define MAX_WEIGHT 30001
 
 
-int get_minimal_weight(int* distances, int* visited, int N) {
+int get_minimal_weight(int* distances, int* visited, int V) {
     if (!distances || !visited) {
         return -1;
     }
     int i = 0;
     int minimum = MAX_WEIGHT;
     int min_index = -1;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < V; i++) {
         if (!visited[i] && distances[i] < minimum) {
             minimum = distances[i];
             min_index = i;
@@ -21,29 +21,29 @@ int get_minimal_weight(int* distances, int* visited, int N) {
 }
 
 
-int** set_adjacency_matrix(int N, int M) {
+int** set_adjacency_matrix(int V, int M) {
     int i;
-    int edge1;
-    int edge2;
+    int vertex1;
+    int vertex2;
     int weight;
-    int** adjacency_matrix = calloc(N, sizeof(int*));
-    for (i = 0; i < N; i++) {
-        adjacency_matrix[i] = calloc(N, sizeof(int));
+    int** adjacency_matrix = calloc(V, sizeof(int*));
+    for (i = 0; i < V; i++) {
+        adjacency_matrix[i] = calloc(V, sizeof(int));
     }
     for (i = 0; i < M; i++) {
-        scanf("%d %d %d", &edge1, &edge2, &weight);
-        edge1--;
-        edge2--;
-        if (adjacency_matrix[edge1][edge2] == 0 || weight < adjacency_matrix[edge1][edge2]) {
-            adjacency_matrix[edge1][edge2] = weight;
-            adjacency_matrix[edge2][edge1] = weight;
+        scanf("%d %d %d", &vertex1, &vertex2, &weight);
+        vertex1--;
+        vertex2--;
+        if (adjacency_matrix[vertex1][vertex2] == 0 || weight < adjacency_matrix[vertex1][vertex2]) {
+            adjacency_matrix[vertex1][vertex2] = weight;
+            adjacency_matrix[vertex2][vertex1] = weight;
         }
     }
     return adjacency_matrix;
 }
 
 
-int get_MST_weight_Prim(int N, int** adjacency_matrix) {
+int get_MST_weight_Prim(int V, int** adjacency_matrix) {
     /*
         In this program array `previous` is not used. I will keep it
         if in future I will need to construct gotten tree.
@@ -56,20 +56,20 @@ int get_MST_weight_Prim(int N, int** adjacency_matrix) {
     int visited_amount;
     int answer = 0;
     int v;
-    int* previous = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
+    int* previous = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
         previous[i] = -1;
     }
-    int* distances = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
+    int* distances = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
         distances[i] = MAX_WEIGHT;
     }
     distances[0] = 0;
-    int* visited = calloc(N, sizeof(int));
-    for (visited_amount = 1; visited_amount < N; visited_amount++) {
-        v = get_minimal_weight(distances, visited, N);
+    int* visited = calloc(V, sizeof(int));
+    for (visited_amount = 1; visited_amount < V; visited_amount++) {
+        v = get_minimal_weight(distances, visited, V);
         visited[v] = 1;
-        for (w = 0; w < N; w++) {
+        for (w = 0; w < V; w++) {
             if (adjacency_matrix[v][w]
             && !visited[w]
             && adjacency_matrix[v][w] < distances[w]) {
@@ -78,13 +78,13 @@ int get_MST_weight_Prim(int N, int** adjacency_matrix) {
             }
         }
     }
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < V; i++) {
         answer += distances[i];
     }
     free(distances);
     free(visited);
     free(previous);
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < V; i++) {
         free(adjacency_matrix[i]);
     }
     free(adjacency_matrix);
@@ -92,11 +92,25 @@ int get_MST_weight_Prim(int N, int** adjacency_matrix) {
 }
 
 
+int free_adjacency_matrix(int** adjacency_matrix, int V) {
+    if (!adjacency_matrix) {
+        return -1;
+    }
+    int i;
+    for (i = 0; i < V; i++) {
+        free(adjacency_matrix[i]);
+    }
+    free(adjacency_matrix);
+    return 1;
+}
+
+
 int main(void) {
-    int N;
+    int V;
     int M;
-    scanf("%d %d", &N, &M);
-    int** adjacency_matrix = set_adjacency_matrix(N, M);
-    printf("%d", get_MST_weight_Prim(N, adjacency_matrix));
+    scanf("%d %d", &V, &M);
+    int** adjacency_matrix = set_adjacency_matrix(V, M);
+    printf("%d", get_MST_weight_Prim(V, adjacency_matrix));
+    free_adjacency_matrix(adjacency_matrix, V);
     return 0;
 }
