@@ -145,6 +145,30 @@ void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
 }
 
 
+int max(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+
+int closest_sum_recursive(int i, int N, int sum, int target, int** final_edges, int* cable_types) {
+    if (i >= N) {
+        return sum;
+    }
+    int pass = closest_sum_recursive(i + 1, N, sum, target, final_edges, cable_types);
+    if (pass > target) {
+        return sum;
+    }
+    int smash = closest_sum_recursive(i + 1, N, sum + final_edges[i][1], target, final_edges, cable_types);
+    if (smash > target) {
+        return pass;
+    }
+    return max(smash, pass);
+}
+
+
 int main(void) {
     int V;
     int E;
@@ -176,6 +200,7 @@ int main(void) {
         is_swapped = 1;
     }
     int** final_edges = calloc(E, sizeof(int*));
+
     for (i = 0; i < E; i++) {
         final_edges[i] = calloc(2, sizeof(int));
     }
@@ -190,12 +215,14 @@ int main(void) {
             }
         }
     }
-
+    int* cable_types = calloc(edges_amount, sizeof(int));
     for (i = 0; i < V - 1; i++) {
         printf("%d %d\n", final_edges[i][0], final_edges[i][1]);
     }
     quick_sort(final_edges, 1, edges_amount, 0, edges_amount - 1);
     i = 0;
+    int min_sum = closest_sum_recursive(0, edges_amount, 0, min_length, final_edges, cable_types);
+    printf("min_sum: %d\n", min_sum);
     int sum = 0;
     while (min_length - final_edges[i][1] >= 0 && i < edges_amount) {
         min_length -= final_edges[i][1];
@@ -220,7 +247,7 @@ int main(void) {
     quick_sort(final_edges, 0, edges_amount, 0, edges_amount - 1);
     printf("Minimal sum: %d\n", sum);
     for (i = 0; i < edges_amount; i++) {
-        printf("%d %d\n", final_edges[i][0] + 1, final_edges[i][1]);
+        printf("%d %d\n", final_edges[i][0] + 1, cable_types[i]);
     }
     free_adjacency_matrix(adjacency_matrix, V);
     return 0;
