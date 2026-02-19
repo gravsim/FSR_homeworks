@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define MAX_WEIGHT 100
+#define MAX_WEIGHT 1000
 
 
 int swap_int_pointers(int** a, int** b) {
@@ -78,10 +78,6 @@ int free_adjacency_matrix(int** adjacency_matrix, int V) {
 
 
 int Prim(int V, int** adjacency_matrix, int* previous) {
-    /*
-        In this program array `previous` is not used. I will keep it
-        if in future I will need to construct gotten tree.
-    */
     if (!adjacency_matrix) {
         return -1;
     }
@@ -228,8 +224,8 @@ int main(void) {
     int** take = calloc(edges_amount, sizeof(int*));
     int** combinations = calloc(edges_amount, sizeof(int*));
     for (i = 0; i < edges_amount; i++) {
-        take[i] = calloc(cheap_length, sizeof(int));
-        combinations[i] = calloc(cheap_length, sizeof(int));
+        take[i] = calloc(cheap_length + 1, sizeof(int));
+        combinations[i] = calloc(cheap_length + 1, sizeof(int));
     }
     int cheap_sum = closest_sum_recursive(0,
         edges_amount,
@@ -237,20 +233,13 @@ int main(void) {
         final_edges,
         take,
         combinations);
-    printf("Take array:\n");
-    for (i = 0; i < edges_amount; i++) {
-        for (j = 0; j < cheap_length; j++) {
-            printf("%d ", take[i][j]);
-        }
-        printf("\n");
-    }
-    printf("combinations array:\n");
-    for (i = 0; i < edges_amount; i++) {
-        for (j = 0; j < cheap_length; j++) {
-            printf("%d ", combinations[i][j]);
-        }
-        printf("\n");
-    }
+    // printf("Take array:\n");
+    // for (i = 0; i < edges_amount; i++) {
+    //     for (j = 0; j < cheap_length + 1; j++) {
+    //         printf("%d ", take[i][j]);
+    //     }
+    //     printf("\n");
+    // }
     int remaining_sum = cheap_length;
     int edges_sum = 0;
     for (i = 0; i < edges_amount; i++) {
@@ -267,5 +256,18 @@ int main(void) {
         printf("%d %d\n", final_edges[i][0] + 1, final_edges[i][1]);
     }
     free_adjacency_matrix(adjacency_matrix, V);
+    for (i = 0; i < E; i++) {
+        free(edges[i]);
+        free(final_edges[i]);
+    }
+    for (i = 0; i < edges_amount; i++) {
+        free(take[i]);
+        free(combinations[i]);
+    }
+    free(final_edges);
+    free(take);
+    free(edges);
+    free(combinations);
+    free(previous);
     return 0;
 }
