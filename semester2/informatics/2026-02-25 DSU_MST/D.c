@@ -5,6 +5,15 @@
 #define MAX_WEIGHT 1000000
 
 
+
+typedef struct Edge {
+    int weight;
+    int index;
+    int connected_vertex;
+    struct Edge* next;
+} Edge;
+
+
 int swap_int_pointers(int** a, int** b) {
     if (!a || !b) {
         return -1;
@@ -43,55 +52,62 @@ int get_minimal_weight(int** distances, int* visited, int V) {
 }
 
 
-int*** set_adjacency_matrix(int V, int M, int** edges) {
+Edge** set_adjacency_list(int V, int M) {
     int i;
-    int j;
     int vertex1;
     int vertex2;
     int weight;
-    int*** adjacency_matrix = calloc(V, sizeof(int**));
-    for (i = 0; i < V; i++) {
-        adjacency_matrix[i] = calloc(V, sizeof(int*));
-        for (j = 0; j < V; j++) {
-            adjacency_matrix[i][j] = calloc(2, sizeof(int));
-            adjacency_matrix[i][j][0] = -1;
-            adjacency_matrix[i][j][1] = -1;
-        }
-    }
+    Edge** adjacency_list = calloc(V, sizeof(Edge*));
     for (i = 0; i < M; i++) {
-        vertex1 = edges[i][0];
-        vertex2 = edges[i][1];
-        weight = edges[i][2];
-        if (adjacency_matrix[vertex1][vertex2][1] == -1 || weight < adjacency_matrix[vertex1][vertex2][1]) {
-            adjacency_matrix[vertex1][vertex2][0] = i;
-            adjacency_matrix[vertex1][vertex2][1] = weight;
-            adjacency_matrix[vertex2][vertex1][0] = i;
-            adjacency_matrix[vertex2][vertex1][1] = weight;
-        }
+        scanf("%d %d %d", &vertex1, &vertex2, &weight);
+        vertex1--;
+        vertex2--;
+        Edge* edge1 = malloc(sizeof(Edge));
+        edge1->weight = weight;
+        edge1->index = i;
+        edge1->next = adjacency_list[vertex1];
+        adjacency_list[vertex1] = edge1;
+        edge1->connected_vertex = vertex2;
+
+        Edge* edge2 = malloc(sizeof(Edge));
+        edge2->weight = weight;
+        edge2->index = i;
+        edge2->next = adjacency_list[vertex2];
+        adjacency_list[vertex2] = edge2;
+        edge2->connected_vertex = vertex1;
     }
-    return adjacency_matrix;
+    return adjacency_list;
 }
 
 
-int free_adjacency_matrix(int*** adjacency_matrix, int V) {
-    if (!adjacency_matrix) {
+void free_list(Edge** head) {
+    Edge* current = *head;
+    Edge* next;
+    while (current) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    *head = NULL;
+}
+
+
+int free_adjacency_list(Edge** adjacency_list, int V) {
+    if (!adjacency_list) {
         return -1;
     }
     int i;
-    int j;
     for (i = 0; i < V; i++) {
-        for (j = 0; j < V; j++) {
-            free(adjacency_matrix[i][j]);
-        }
-        free(adjacency_matrix[i]);
+        free_list(adjacency_list + i);
+        free(adjacency_list[i]);
     }
-    free(adjacency_matrix);
+    free(adjacency_list);
     return 1;
 }
 
 
-int Prim(int V, int*** adjacency_matrix, int* previous, int** distances, int* visited) {
-    if (!adjacency_matrix) {
+int Prim(int V, Edge** adjacency_list, int* previous, int** distances, int* visited) {
+    if (!adjacency_list) {
         return -1;
     }
     int i;
@@ -105,14 +121,18 @@ int Prim(int V, int*** adjacency_matrix, int* previous, int** distances, int* vi
             return -1;
         }
         visited[v] = 1;
-        for (w = 0; w < V; w++) {
-            if (adjacency_matrix[v][w][1] != -1
+        Edge* current = adjacency_list[v];
+        int w;
+        while (current) {
+            w = current->connected_vertex;
+            if (current->weight != -1
             && !visited[w]
-            && adjacency_matrix[v][w][1] < distances[w][1]) {
+            && current->weight < distances[w][1]) {
                 previous[w] = v;
-                distances[w][1] = adjacency_matrix[v][w][1];
-                distances[w][0] = adjacency_matrix[v][w][0];
+                distances[w][1] = current->weight;
+                distances[w][0] = current->index;
             }
+            current = current->next;
         }
     }
     for (i = 0; i < V - 1; i++) {
@@ -184,14 +204,7 @@ int main(void) {
         return 0;
     }
     int* previous = calloc(V, sizeof(int));
-    int** edges = calloc(E, sizeof(int*));
-    for (i = 0; i < E; i++) {
-        edges[i] = calloc(3, sizeof(int));
-        scanf("%d %d %d", edges[i], edges[i] + 1, edges[i] + 2);
-        edges[i][0]--;
-        edges[i][1]--;
-    }
-    int*** adjacency_matrix = set_adjacency_matrix(V, E, edges);
+    Edge** adjacency_list = set_adjacency_list(V, E);
     int expensive_price;
     int cheap_price;
     int expensive_length;
@@ -208,7 +221,6 @@ int main(void) {
     for (i = 0; i < V; i++) {
         previous[i] = -1;
     }
-
     int** distances = calloc(V, sizeof(int*));
     for (i = 0; i < V; i++) {
         distances[i] = calloc(2, sizeof(int));
@@ -217,15 +229,12 @@ int main(void) {
     }
     distances[0][1] = 0;
     int* visited = calloc(V, sizeof(int));
-    if (Prim(V, adjacency_matrix, previous, distances, visited) < 0) {
+    int edges_sum = Prim(V, adjacency_list, previous, distances, visited);
+    if (edges_sum < 0) {
         printf("Impossible");
         return 0;
     }
     int** distances_shifted = distances + 1;
-    int edges_sum = 0;
-    for (i = 0; i < V - 1; i++) {
-        edges_sum += distances_shifted[i][1];
-    }
     int** take = calloc(V - 1, sizeof(int*));
     int** combinations = calloc(V - 1, sizeof(int*));
     for (i = 0; i < V - 1; i++) {
@@ -259,10 +268,7 @@ int main(void) {
     for (i = 0; i < V - 1; i++) {
         printf("%d %d\n", distances_shifted[i][0] + 1, distances_shifted[i][1]);
     }
-    free_adjacency_matrix(adjacency_matrix, V);
-    for (i = 0; i < E; i++) {
-        free(edges[i]);
-    }
+    free_adjacency_list(adjacency_list, V);
     for (i = 0; i < V - 1; i++) {
         free(take[i]);
         free(combinations[i]);
@@ -273,7 +279,6 @@ int main(void) {
     free(distances);
     free(take);
     free(visited);
-    free(edges);
     free(combinations);
     free(previous);
     return 0;
