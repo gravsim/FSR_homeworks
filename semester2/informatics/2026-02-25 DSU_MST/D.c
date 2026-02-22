@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
-#define MAX_WEIGHT 1000000
-
+#define MAX_WEIGHT 1000
 
 
 typedef struct Edge {
@@ -23,6 +21,7 @@ int swap_int_pointers(int** a, int** b) {
     *b = tmp;
     return 1;
 }
+
 
 int swap_int(int* a, int* b) {
     if (!a || !b) {
@@ -216,25 +215,11 @@ int set_types(int cheap_length,
             types[i] = expensive_type;
         }
     }
-    printf("combinates:\n");
-    for (j = 0; j < cheap_length + 1; j++) {
-        printf("%d ", combinations[j]);
-    }
-    printf("\nprev:\n");
-    for (j = 0; j < cheap_length + 1; j++) {
-        printf("%d ", prev[j]);
-    }
-    printf("\nused:\n");
-    for (j = 0; j < cheap_length + 1; j++) {
-        printf("%d ", used_indices[j]);
-    }
-    printf("\n");
     free(combinations);
     free(prev);
     free(used_indices);
     return cheap_sum;
 }
-
 
 
 int main(void) {
