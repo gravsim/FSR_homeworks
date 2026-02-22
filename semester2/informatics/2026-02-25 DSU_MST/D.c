@@ -165,36 +165,82 @@ void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
 }
 
 
-int closest_sum_recursive(int i,
-    int N,
-    int remaining_sum,
-    int** distances) {
-    if (i >= N) {
-        return 0;
+int set_types(int cheap_length,
+    int V,
+    int** distances_shifted,
+    int* types,
+    int cheap_type,
+    int expensive_type) {
+
+    int i;
+    int j;
+    int* combinations = calloc(cheap_length + 1, sizeof(int));
+    int* prev = calloc(cheap_length + 1, sizeof(int));
+    int* used_indices = calloc(cheap_length + 1, sizeof(int));
+    combinations[0] = 0;
+    for (i = 1; i < cheap_length + 1; i++) {
+        combinations[i] = -1;
+        prev[i] = -1;
+        used_indices[i] = -1;
     }
-    int best_result = closest_sum_recursive(i + 1, N, remaining_sum, distances);
-    if (distances[i][1] <= remaining_sum) {
-        int smash = distances[i][1] + closest_sum_recursive(i + 1, N, remaining_sum - distances[i][1], distances);
-        if (smash > best_result) {
-            best_result = smash;
+    int weight;
+    int new_sum;
+    int previous_index;
+    for (i = 0; i < V - 1; i++) {
+        weight = distances_shifted[i][1];
+        for (j = cheap_length; j >= weight; j--) {
+            previous_index = j - weight;
+            if (combinations[previous_index] != -1) {
+                new_sum = combinations[previous_index] + weight;
+                if (new_sum > combinations[j]) {
+                    combinations[j] = new_sum;
+                    prev[j] = previous_index;
+                    used_indices[j] = i;
+                }
+            }
         }
     }
-    return best_result;
+    i = cheap_length;
+    while (combinations[i] == -1) {
+        i--;
+    }
+    int cheap_sum = combinations[i];
+    int remaining = cheap_sum;
+    while (remaining > 0) {
+        int index = used_indices[remaining];
+        types[index] = cheap_type;
+        remaining = prev[remaining];
+    }
+    for (i = 0; i < V - 1; i++) {
+        if (types[i] != cheap_type) {
+            types[i] = expensive_type;
+        }
+    }
+    printf("combinates:\n");
+    for (j = 0; j < cheap_length + 1; j++) {
+        printf("%d ", combinations[j]);
+    }
+    printf("\nprev:\n");
+    for (j = 0; j < cheap_length + 1; j++) {
+        printf("%d ", prev[j]);
+    }
+    printf("\nused:\n");
+    for (j = 0; j < cheap_length + 1; j++) {
+        printf("%d ", used_indices[j]);
+    }
+    printf("\n");
+    free(combinations);
+    free(prev);
+    free(used_indices);
+    return cheap_sum;
 }
 
-int max(int a, int b) {
-    if (a < b) {
-        return b;
-    }
-    return a;
-}
 
 
 int main(void) {
     int V;
     int E;
     int i;
-    int j;
     scanf("%d %d", &V, &E);
     if (E < V - 1) {
         printf("Impossible");
@@ -229,60 +275,29 @@ int main(void) {
     int edges_sum = Prim(V, adjacency_list, previous, distances, visited);
     if (edges_sum < 0) {
         printf("Impossible");
+        free_adjacency_list(adjacency_list, V);
+        for (i = 0; i < V; i++) {
+            free(distances[i]);
+        }
+        free(distances);
+        free(visited);
+        free(previous);
         return 0;
     }
     int** distances_shifted = distances + 1;
     quick_sort(distances_shifted, 0, V - 1, 0, V - 2);
-    int* combinates = calloc(cheap_length + 1, sizeof(int));
-    int* prev = calloc(cheap_length + 1, sizeof(int));
-    int* used = calloc(cheap_length + 1, sizeof(int));
     int* types = calloc(V - 1, sizeof(int));
-    combinates[0] = 0;
-    for (i = 1; i < cheap_length + 1; i++) {
-        combinates[i] = -1;
-        prev[i] = -1;
-        used[i] = -1;
-    }
-    int** take = calloc(V, sizeof(int*));
-    for (i = 0; i < V; i++) {
-        take[i] = calloc(cheap_length + 1, sizeof(int));
-    }
-    int weight;
-    for (i = 0; i < V - 1; i++) {
-        weight = distances_shifted[i][1];
-        for (j = cheap_length; j >= weight; j--) {
-            if (combinates[j - weight] != -1) {
-                int aboba = combinates[j - weight] + weight;
-                if (aboba > combinates[j]) {
-                    combinates[j] = aboba;
-                    prev[j] = j - weight;
-                    used[j] = i;
-                }
-            }
-        }
-    }
-    i = cheap_length;
-    while (combinates[i] == -1) {
-        i--;
-    }
-    int cheap_sum = combinates[i];
-    printf("combinates:\n");
-    for (j = 0; j < cheap_length + 1; j++) {
-        printf("%d ", combinates[j]);
-    }
-    int remaining = cheap_sum;
-    while (remaining > 0) {
-        int index = used[remaining];
-        types[index] = cheap_type;
-        remaining = prev[remaining];
-    }
-    for (i = 0; i < V - 1; i++) {
-        if (types[i] != cheap_type) {
-            types[i] = expensive_type;
-        }
-    }
+    int cheap_sum = set_types(cheap_length, V, distances_shifted, types, cheap_type, expensive_type);
     if (edges_sum > cheap_sum + expensive_length) {
         printf("Impossible");
+        free_adjacency_list(adjacency_list, V);
+        for (i = 0; i < V; i++) {
+            free(distances[i]);
+        }
+        free(distances);
+        free(visited);
+        free(previous);
+        free(types);
         return 0;
     }
     printf("%d\n", cheap_sum * cheap_price + (edges_sum - cheap_sum) * expensive_price);
@@ -296,5 +311,6 @@ int main(void) {
     free(distances);
     free(visited);
     free(previous);
+    free(types);
     return 0;
 }
