@@ -43,11 +43,7 @@ int** set_adjacency_matrix(int V, int M) {
 }
 
 
-int get_MST_weight_Prim(int V, int** adjacency_matrix) {
-    /*
-        In this program array `previous` is not used. I will keep it
-        if in future I will need to construct gotten tree.
-    */
+int Prims_algorithm(int V, int** adjacency_matrix, int* distances, int* visited) {
     if (!adjacency_matrix) {
         return -1;
     }
@@ -56,16 +52,6 @@ int get_MST_weight_Prim(int V, int** adjacency_matrix) {
     int visited_amount;
     int answer = 0;
     int v;
-    int* previous = calloc(V, sizeof(int));
-    for (i = 0; i < V; i++) {
-        previous[i] = -1;
-    }
-    int* distances = calloc(V, sizeof(int));
-    for (i = 0; i < V; i++) {
-        distances[i] = MAX_WEIGHT;
-    }
-    distances[0] = 0;
-    int* visited = calloc(V, sizeof(int));
     for (visited_amount = 1; visited_amount < V; visited_amount++) {
         v = get_minimal_weight(distances, visited, V);
         visited[v] = 1;
@@ -73,7 +59,6 @@ int get_MST_weight_Prim(int V, int** adjacency_matrix) {
             if (adjacency_matrix[v][w]
             && !visited[w]
             && adjacency_matrix[v][w] < distances[w]) {
-                previous[w] = v;
                 distances[w] = adjacency_matrix[v][w];
             }
         }
@@ -81,13 +66,6 @@ int get_MST_weight_Prim(int V, int** adjacency_matrix) {
     for (i = 0; i < V; i++) {
         answer += distances[i];
     }
-    free(distances);
-    free(visited);
-    free(previous);
-    for (i = 0; i < V; i++) {
-        free(adjacency_matrix[i]);
-    }
-    free(adjacency_matrix);
     return answer;
 }
 
@@ -106,11 +84,20 @@ int free_adjacency_matrix(int** adjacency_matrix, int V) {
 
 
 int main(void) {
+    int i;
     int V;
     int M;
     scanf("%d %d", &V, &M);
     int** adjacency_matrix = set_adjacency_matrix(V, M);
-    printf("%d", get_MST_weight_Prim(V, adjacency_matrix));
+    int* distances = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
+        distances[i] = MAX_WEIGHT;
+    }
+    distances[0] = 0;
+    int* visited = calloc(V, sizeof(int));
+    printf("%d", Prims_algorithm(V, adjacency_matrix, distances, visited));
     free_adjacency_matrix(adjacency_matrix, V);
+    free(distances);
+    free(visited);
     return 0;
 }

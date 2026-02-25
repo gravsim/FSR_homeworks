@@ -104,7 +104,7 @@ int free_adjacency_list(Edge** adjacency_list, int V) {
 }
 
 
-int Prim(int V, Edge** adjacency_list, int* previous, int** distances, int* visited) {
+int Prims_algorithm(int V, Edge** adjacency_list, int* previous, int** distances, int* visited) {
     if (!adjacency_list) {
         return -1;
     }
@@ -257,7 +257,7 @@ int main(void) {
     }
     distances[0][1] = 0;
     int* visited = calloc(V, sizeof(int));
-    int edges_sum = Prim(V, adjacency_list, previous, distances, visited);
+    int edges_sum = Prims_algorithm(V, adjacency_list, previous, distances, visited);
     if (edges_sum < 0) {
         printf("Impossible");
         free_adjacency_list(adjacency_list, V);

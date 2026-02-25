@@ -103,7 +103,7 @@ int flatten_indices(int N, int i, int j) {
 }
 
 
-double Kruskal(double* edges, int** incidences, int N, DSU_node** nodes, int components) {
+double Kruskals_algorithm(double* edges, int** incidences, int N, DSU_node** nodes, int components) {
     if (!edges || !incidences || !nodes) {
         return -1;
     }
@@ -166,7 +166,7 @@ int main(void) {
         }
         union_set(nodes[x], nodes[y], 0.0);
     }
-    printf("%.5lf", Kruskal(edges, incidences, N, nodes, components));
+    printf("%.5lf", Kruskals_algorithm(edges, incidences, N, nodes, components));
     for (i = 0; i < N; i++) {
         free(positions[i]);
         free(nodes[i]);

@@ -76,6 +76,8 @@ int main(void) {
                 x--;
                 printf("%d\n", find_set(nodes[x])->sum);
                 break;
+            default:
+                break;
         }
     }
     for (i = 0; i < n; i++) {

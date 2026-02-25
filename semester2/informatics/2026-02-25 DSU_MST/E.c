@@ -81,7 +81,7 @@ int push(Heap* heap, int index, int value) {
 }
 
 
-int pop_maximum(Heap* heap, int* index, int* value) {
+int pop_minimum(Heap* heap, int* index, int* value) {
     *value = heap->values[0].weight;
     *index = heap->values[0].index;
     heap->values[0] = heap->values[--heap->size];
@@ -98,28 +98,6 @@ int init_heap(Heap** heap) {
 }
 
 
-int swap_int_pointers(int** a, int** b) {
-    if (!a || !b) {
-        return -1;
-    }
-    int* tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
-int swap_int(int* a, int* b) {
-    if (!a || !b) {
-        return -1;
-    }
-    int tmp = *a;
-     *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
 int min(int a, int b) {
     if (a < b) {
         return a;
@@ -128,7 +106,7 @@ int min(int a, int b) {
 }
 
 
-void change_weight(
+int change_weight(
     Heap* heap,
     int N,
     int M,
@@ -141,60 +119,65 @@ void change_weight(
     int parent_x,
     int parent_y) {
     int index = target_y * M + target_x;
+    if (!visited || !previous) {
+        return -1;
+    }
     if (target_x >= 0 && target_x < M && target_y >= 0 && target_y < N && !visited[index] && distances[index] > weight) {
         distances[index] = weight;
         previous[index] = parent_y * M + parent_x;
         push(heap, index, weight);
     }
+    return 1;
 }
 
 
-int Prim(Heap* heap, int N, int M, int V, int** connections, int* distances, int* visited, int* previous) {
-    if (!connections) {
+int Prims_algorithm(Heap* heap, int N, int M, int** connections, int* distances, int* visited, int* previous) {
+    if (!connections || !visited || !distances || !previous || !connections) {
         return -1;
     }
-    int visited_amount;
     int v;
     int x;
     int y;
     int weight;
     int value;
-    for (visited_amount = 1; visited_amount < V; visited_amount++) {
-        pop_maximum(heap, &v, &value);
+    while (heap->size > 0) {
+        pop_minimum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
-        visited[v] = 1;
-        x = v % M;
-        y = v / M;
-        if (x - 1 >= 0) {
-            if (connections[y][x - 1] == 2 || connections[y][x - 1] == 3) {
+        if (!visited[v]) {
+            visited[v] = 1;
+            x = v % M;
+            y = v / M;
+            if (x - 1 >= 0) {
+                if (connections[y][x - 1] == 2 || connections[y][x - 1] == 3) {
+                    weight = 0;
+                } else {
+                    weight = 2;
+                }
+                change_weight(heap, N, M, distances, visited, previous, weight, x-1, y, x, y);
+            }
+            if (y - 1 >= 0) {
+                if (connections[y - 1][x] == 1 || connections[y - 1][x] == 3) {
+                    weight = 0;
+                } else {
+                    weight = 1;
+                }
+                change_weight(heap, N, M, distances, visited, previous, weight, x, y-1, x, y);
+            }
+            if (connections[y][x] == 2 || connections[y][x] == 3) {
                 weight = 0;
             } else {
                 weight = 2;
             }
-            change_weight(heap, N, M, distances, visited, previous, weight, x-1, y, x, y);
-        }
-        if (y - 1 >= 0) {
-            if (connections[y - 1][x] == 1 || connections[y - 1][x] == 3) {
+            change_weight(heap, N, M, distances, visited, previous, weight, x+1, y, x, y);
+            if (connections[y][x] == 1 || connections[y][x] == 3) {
                 weight = 0;
             } else {
                 weight = 1;
             }
-            change_weight(heap, N, M, distances, visited, previous, weight, x, y-1, x, y);
+            change_weight(heap, N, M, distances, visited, previous, weight, x, y+1, x, y);
         }
-        if (connections[y][x] == 2 || connections[y][x] == 3) {
-            weight = 0;
-        } else {
-            weight = 2;
-        }
-        change_weight(heap, N, M, distances, visited, previous, weight, x+1, y, x, y);
-        if (connections[y][x] == 1 || connections[y][x] == 3) {
-            weight = 0;
-        } else {
-            weight = 1;
-        }
-        change_weight(heap, N, M, distances, visited, previous, weight, x, y+1, x, y);
     }
     return 1;
 }
@@ -233,7 +216,7 @@ int main(void) {
     int* visited = calloc(V, sizeof(int));
     int target_x;
     int target_y;
-    Prim(heap, N, M, V, connections, distances, visited, previous);
+    Prims_algorithm(heap, N, M, connections, distances, visited, previous);
     for (i = 0; i < V; i++) {
         if (previous[i] != -1) {
             sum += distances[i];
@@ -271,5 +254,6 @@ int main(void) {
         free(connections[i]);
     }
     free(connections);
+    free(heap);
     return 0;
 }
