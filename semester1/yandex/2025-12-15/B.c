@@ -6,7 +6,7 @@
 
 typedef struct Node {
     int key;
-    int priority;
+    double priority;
 } Node;
 
 
@@ -35,6 +35,11 @@ int swap_nodes(Node* a, Node* b) {
 
 int is_full(Heap* heap) {
     return heap->size == heap->capacity;
+}
+
+
+int is_empty(Heap* heap) {
+    return heap->size != 0;
 }
 
 
@@ -69,7 +74,7 @@ int sift_down(Heap* heap, int key) {
 }
 
 
-int push(Heap* heap, int key, int priority) {
+int push(Heap* heap, int key, double priority) {
     if (is_full(heap)) {
         expand(heap);
     }
@@ -81,7 +86,7 @@ int push(Heap* heap, int key, int priority) {
 }
 
 
-int pop_minimum(Heap* heap, int* key, int* priority) {
+int pop_minimum(Heap* heap, int* key, double* priority) {
     *priority = heap->values[0].priority;
     *key = heap->values[0].key;
     heap->values[0] = heap->values[--heap->size];
@@ -131,11 +136,14 @@ int change_weight(
 }
 
 
+
+int double_equal(double a, double b) {
+    return a - b < 1e-10;
+}
+
+
 int main(void) {
-    int M;
-    int N;
     int i;
-    int j;
     int command;
     int key;
     double priority;
@@ -147,8 +155,33 @@ int main(void) {
         switch (command) {
             case 1:
                 scanf("%d %lf", &key, &priority);
+                push(heap, key, priority);
+                break;
             case 2:
-                pop_minimum(heap, )
+                if (is_empty(heap)) {
+                    printf("The P_queue is empty");
+                } else {
+                    pop_minimum(heap, &key, &priority);
+                    printf("%d %lf\n", key, priority);
+                }
+                break;
+            case 3:
+                if (is_empty(heap)) {
+                    printf("1");
+                } else {
+                    printf("0");
+                }
+                break;
+            case 4:
+                scanf("%d %lf", &key, &priority);
+                for (i = 0; i < heap->size; i++) {
+                    if (double_equal(heap->values[i].key, key)) {
+                        heap->values[i].priority = priority;
+                    }
+                }
+                break;
+            default:
+                break;
         }
     }
 
