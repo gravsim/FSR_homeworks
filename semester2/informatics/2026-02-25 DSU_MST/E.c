@@ -4,14 +4,6 @@
 #define MAX_WEIGHT 1000
 
 
-typedef struct Edge {
-    int weight;
-    int index;
-    int connected_vertex;
-    struct Edge* next;
-} Edge;
-
-
 int swap_int_pointers(int** a, int** b) {
     if (!a || !b) {
         return -1;
@@ -28,9 +20,17 @@ int swap_int(int* a, int* b) {
         return -1;
     }
     int tmp = *a;
-    *a = *b;
+     *a = *b;
     *b = tmp;
     return 1;
+}
+
+
+int min(int a, int b) {
+    if (a < b) {
+        return a;
+    }
+    return b;
 }
 
 
@@ -51,69 +51,77 @@ int get_minimal_weight(int* distances, int* visited, int V) {
 }
 
 
-void set_distance(
-    int* added_amount,
+void change_weight(
+    int status,
     int N,
     int M,
     int* distances,
     int* visited,
     int* previous,
-    int x,
-    int y,
-    int length,
+    int weight,
+    int target_x,
+    int target_y,
     int parent_x,
     int parent_y) {
-    if (x < M && y < N && !visited[y * M + x] && distances[y * M + x] > length) {
-        distances[y * M + x] = length;
-        previous[y * M + x] = parent_y * M + parent_x;
+    int index = target_y * M + target_x;
+    if (target_x >= 0 && target_x < M && target_y >= 0 && target_y < N && !visited[index] && distances[index] > weight) {
+        distances[index] = weight;
+        previous[index] = parent_y * M + parent_x;
     }
 }
 
 
-int Prim(int* added_amount, int N, int M, int V, int** adjacency_matrix, int* distances, int* visited, int* previous) {
-    if (!adjacency_matrix) {
+int Prim(int* added_amount, int N, int M, int V, int** connections, int* distances, int* visited, int* previous) {
+    if (!connections) {
         return -1;
     }
-    int i;
     int visited_amount;
-    int answer = 0;
     int v;
     int x;
     int y;
+    int weight;
     for (visited_amount = 1; visited_amount < V; visited_amount++) {
         v = get_minimal_weight(distances, visited, V);
+        if (v == -1) {
+            return -1;
+        }
         visited[v] = 1;
         x = v % M;
         y = v / M;
-        switch (adjacency_matrix[y][x]) {
-            case 0:
-                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,2,x,y);
-                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,1,x,y);
-                break;
-            case 1:
-                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,2,x,y);
-                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,0,x,y);
-                break;
-            case 2:
-                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,0,x,y);
-                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,1,x,y);
-                break;
-            case 3:
-                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,0,x,y);
-                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,0,x,y);
-                break;
-            default:
-                break;
+        if (x - 1 >= 0) {
+            if (connections[y][x - 1] == 2 || connections[y][x - 1] == 3) {
+                weight = 0;
+            } else {
+                weight = 2;
+            }
+            change_weight(connections[y][x], N, M, distances, visited, previous, weight, x-1, y, x, y);
         }
+        if (y - 1 >= 0) {
+            if (connections[y - 1][x] == 1 || connections[y - 1][x] == 3) {
+                weight = 0;
+            } else {
+                weight = 1;
+            }
+            change_weight(connections[y][x], N, M, distances, visited, previous, weight, x, y-1, x, y);
+        }
+        if (connections[y][x] == 2 || connections[y][x] == 3) {
+            weight = 0;
+        } else {
+            weight = 2;
+        }
+        change_weight(connections[y][x], N, M, distances, visited, previous, weight, x+1, y, x, y);
+        if (connections[y][x] == 1 || connections[y][x] == 3) {
+            weight = 0;
+        } else {
+            weight = 1;
+        }
+        change_weight(connections[y][x], N, M, distances, visited, previous, weight, x, y+1, x, y);
     }
-    for (i = 0; i < V; i++) {
-        answer += distances[i];
-    }
-    return answer;
+    return 1;
 }
 
 
-void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
+void quick_sort(int** main_array, int sort_index, int down, int up) {
     if (down >= up) {
         return;
     }
@@ -133,11 +141,9 @@ void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
             right--;
         }
     }
-    quick_sort(main_array, sort_index, size, down, right);
-    quick_sort(main_array, sort_index, size, left, up);
+    quick_sort(main_array, sort_index, down, right);
+    quick_sort(main_array, sort_index, left, up);
 }
-
-
 
 
 int main(void) {
@@ -148,13 +154,13 @@ int main(void) {
     int added_amount = 0;
     scanf("%d %d", &N, &M);
     int V = M * N;
-    int** adjacency_matrix = calloc(N, sizeof(int*));
+    int** connections = calloc(N, sizeof(int*));
     for (i = 0; i < N; i++) {
-        adjacency_matrix[i] = calloc(M, sizeof(int*));
+        connections[i] = calloc(M, sizeof(int));
     }
     for (i = 0; i < N; i++) {
         for (j = 0; j < M; j++) {
-            scanf("%d", adjacency_matrix[i] + j);
+            scanf("%d", connections[i] + j);
         }
     }
     int* previous = calloc(V, sizeof(int));
@@ -166,15 +172,45 @@ int main(void) {
         distances[i] = MAX_WEIGHT;
     }
     distances[0] = 0;
+    int sum = 0;
     int* visited = calloc(V, sizeof(int));
-    int result = Prim(&added_amount, N, M, V, adjacency_matrix, distances, visited, previous);
-    printf("added_amount: %d Sum: %d\n", added_amount, result);
+    int x;
+    int y;
+    Prim(&added_amount, N, M, V, connections, distances, visited, previous);
+    for (i = 0; i < V; i++) {
+        sum += distances[i];
+        if (distances[i] > 0) {
+            added_amount++;
+        }
+    }
+    int parent_x;
+    int parent_y;
+    int parent;
+    int weight;
+    printf("%d %d\n", added_amount, sum);
+    for (i = 0; i < V; i++) {
+        x = i % M;
+        y = i / M;
+        if (distances[i] > 0) {
+            parent = previous[i];
+            parent_x = parent % M;
+            parent_y = i / M;
+            if (x == parent_x) {
+                y = min(y, parent_y);
+                weight = 1;
+            } else {
+                x = min(x, parent_x);
+                weight = 2;
+            }
+            printf("%d %d %d\n", x+1, y+1, weight);
+        }
+    }
     free(distances);
     free(visited);
     free(previous);
-    for (i = 0; i < V; i++) {
-        free(adjacency_matrix[i]);
+    for (i = 0; i < N; i++) {
+        free(connections[i]);
     }
-    free(adjacency_matrix);
+    free(connections);
     return 0;
 }
