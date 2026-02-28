@@ -113,6 +113,7 @@ int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int N, int* distanc
     }
     int v;
     int w;
+    int visited_amount = 0;
     int value;
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
@@ -129,6 +130,7 @@ int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int N, int* distanc
                 push(heap, w, distances[v] + adjacency_matrix[v][w]);
             }
         }
+        visited_amount++;
     }
     return 1;
 }
