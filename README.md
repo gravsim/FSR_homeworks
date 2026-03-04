@@ -15,8 +15,8 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 ### 2 Cеместр
 [2026-03-02 4. Форд-Фалкерсон](https://contest.yandex.ru/contest/91233/problems/)\
 [2026-02-25 3. Флойд-Уоршелл-Рой](https://contest.yandex.ru/contest/91072/enter)\
-[2026-02-19 2. Дейкстра](https://contest.yandex.ru/contest/90656/enter)\
-[2026-02-16 1. Прим/Краскал](https://contest.yandex.ru/contest/90464/enter)
+[2026-02-19 2. Восстановление пути](https://contest.yandex.ru/contest/90656/enter)\
+[2026-02-16 1. Дейкстра](https://contest.yandex.ru/contest/90464/enter)
 ### 1 Cеместр
 [2025-12-15 12. Прим/Краскал/Очередь с приоритетом](https://contest.yandex.ru/contest/87246/enter)\
 [2025-12-01 11. Способы представления графа](https://contest.yandex.ru/contest/86366/enter)\
