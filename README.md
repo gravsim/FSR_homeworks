@@ -32,6 +32,7 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 [2025-09-11 2. Рекурсия](https://contest.yandex.ru/contest/81307/enter)\
 [2025-09-04 1. Операторы сравнения](https://contest.yandex.ru/contest/80760/enter)
 
+[Shadertoy](https://www.shadertoy.com/user/gravsim)\
 [Информатикс](https://informatics.msk.ru/enrol/index.php?id=6308)\
 [Сайт мехмата по проге](https://serg.tk/)\
 [cppreference](https://cppreference.com/)
