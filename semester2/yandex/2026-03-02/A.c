@@ -3,22 +3,68 @@
 #include <limits.h>
 
 
-int Ford_Fulkerson_algorithm(int** adjacency_matrix, int n, int** distances, int** previous) {
-    if (!adjacency_matrix || !distances || !previous) {
-        return -1;
+int DFS_recursive(int** adjacency_matrix,
+                    int* visited,
+                    int current,
+                    int source,
+                    int target,
+                    int V,
+                    int* minimal_edge,
+                    int** path,
+                    int* size) {
+    if (!adjacency_matrix || !visited) {
+        return 0;
     }
+    visited[current] = 1;
     int i;
-    int j;
-    int k;
-    for (k = 0; k < n - 1; k++) {
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < n; j++) {
-                if (distances[i][j] > distances[i][k] + distances[k][j]) {
-                    distances[i][j] = distances[i][k] + distances[k][j];
-                    previous[i][j] = previous[k][j];
-                }
+    for (i = 0; i < V; i++) {
+        if (!visited[i] && adjacency_matrix[current][i]) {
+            if (adjacency_matrix[current][i] < *minimal_edge) {
+                *minimal_edge = adjacency_matrix[current][i];
+            }
+            path[*size][0] = current;
+            path[*size][1] = i;
+            (*size)++;
+            if (i == target) {
+                return 1;
+            }
+            if (DFS_recursive(adjacency_matrix, visited, i, source, target, V, minimal_edge, path, size)) {
+                return 1;
             }
         }
+    }
+    return 0;
+}
+
+
+int clear_visited(int* visited, int V) {
+    int i;
+    for ( i = 0; i < V; i++) {
+        visited[i] = 0;
+    }
+    return 0;
+}
+
+
+int Ford_Fulkerson_algorithm(int** adjacency_matrix, int V, int s, int t, int* visited, int** path) {
+    if (!adjacency_matrix || !visited) {
+        return -1;
+    }
+    int size = 0;
+    int i;
+    int u;
+    int v;
+    int minimal_edge = INT_MAX;
+    while (DFS_recursive(adjacency_matrix, visited, s, s, t, V, &minimal_edge, path, &size)) {
+        for (i = 0; i < size; i++) {
+            u = path[i][0];
+            v = path[i][1];
+            adjacency_matrix[u][v] -= minimal_edge;
+            adjacency_matrix[v][u] -= minimal_edge;
+        }
+        size = 0;
+        clear_visited(visited, V);
+        minimal_edge = INT_MAX;
     }
     return 1;
 }
@@ -54,72 +100,33 @@ int free_adjacency_matrix(int*** adjacency_matrix, int V) {
 }
 
 
-int get_min_distance(int n, int m, int k, int** distances, int* from, int* to) {
-    if (!distances || !from || !to) {
+
+
+int set_arrays(int V, int** adjacency_matrix, int** visited, int*** path) {
+    if (!adjacency_matrix || !visited) {
         return -1;
     }
     int i;
     int j;
-    int min_distance = INT_MAX;
-    for (i = 0; i < k; i++) {
-        for (j = n - m; j < n; j++) {
-            if (distances[i][j] < min_distance) {
-                min_distance = distances[i][j];
-                *from = i;
-                *to = j;
-            }
-        }
+    *visited = calloc(V, sizeof(int));
+    *path = calloc(V, sizeof(int*));
+    for (i = 0; i < V; i++) {
+        (*path)[i] = calloc(2, sizeof(int));
     }
     return 1;
 }
 
 
-int set_arrays(int n, int** adjacency_matrix, int*** previous, int*** distances) {
-    if (!adjacency_matrix || !previous || !distances) {
+int free_arrays(int V, int** visited, int*** path) {
+    if (!visited) {
         return -1;
     }
     int i;
-    int j;
-    *previous = calloc(n, sizeof(int*));
-    for (i = 0; i < n; i++) {
-        (*previous)[i] = calloc(n, sizeof(int));
-        for (j = 0; j < n; j++) {
-            if (adjacency_matrix[i][j]) {
-                (*previous)[i][j] = i;
-            } else {
-                (*previous)[i][j] = -1;
-            }
-
-        }
+    for (i = 0; i < V; i++) {
+        free((*path)[i]);
     }
-    *distances = calloc(n, sizeof(int*));
-    for (i = 0; i < n; i++) {
-        (*distances)[i] = calloc(n, sizeof(int));
-        for (j = 0; j < n; j++) {
-            if (i == j) {
-                (*distances)[i][j] = 0;
-            } else if (adjacency_matrix[i][j]) {
-                (*distances)[i][j] = adjacency_matrix[i][j];
-            } else {
-                (*distances)[i][j] = INT_MAX;
-            }
-        }
-    }
-    return 1;
-}
-
-
-int free_arrays(int n, int*** previous, int*** distances) {
-    if (!previous || !distances) {
-        return -1;
-    }
-    int i;
-    for (i = 0; i < n; i++) {
-        free((*distances)[i]);
-        free((*previous)[i]);
-    }
-    free(*distances);
-    free(*previous);
+    free(*visited);
+    free(*path);
     return 1;
 }
 
@@ -129,18 +136,21 @@ int main(void) {
     int E;
     int s;
     int t;
-    int m;
     int i;
-    int j;
     scanf("%d %d %d %d", &V, &E, &s, &t);
     int** adjacency_matrix = set_adjacency_matrix(V, E);
-    int** distances;
-    int** previous;
-    set_arrays(V, adjacency_matrix, &previous, &distances);
-    Ford_Fulkerson_algorithm(adjacency_matrix, V, distances, previous);
-
-    printf("%d %d", from, to);
+    int* visited;
+    int** path;
+    set_arrays(V, adjacency_matrix, &visited, &path);
+    Ford_Fulkerson_algorithm(adjacency_matrix, V, s, t, visited, path);
+    int sum = 0;
+    for (i = 0; i < V; i++) {
+        if (adjacency_matrix[t][i]) {
+            sum -= adjacency_matrix[t][i];
+        }
+    }
+    printf("%d", sum);
     free_adjacency_matrix(&adjacency_matrix, V);
-    free_arrays(V, &previous, &distances);
+    free_arrays(V, &visited, &path);
     return 0;
 }
