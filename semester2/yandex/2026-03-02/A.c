@@ -3,7 +3,7 @@
 #include <limits.h>
 
 
-int Floyd_Warshall_algorithm(int** adjacency_matrix, int n, int** distances, int** previous) {
+int Ford_Fulkerson_algorithm(int** adjacency_matrix, int n, int** distances, int** previous) {
     if (!adjacency_matrix || !distances || !previous) {
         return -1;
     }
@@ -24,17 +24,18 @@ int Floyd_Warshall_algorithm(int** adjacency_matrix, int n, int** distances, int
 }
 
 
-int** set_adjacency_matrix(int V) {
+int** set_adjacency_matrix(int V, int E) {
     int i;
-    int j;
+    int from;
+    int to;
+    int weight;
     int** adjacency_matrix = calloc(V, sizeof(int*));
     for (i = 0; i < V; i++) {
         adjacency_matrix[i] = calloc(V, sizeof(int));
     }
-    for (i = 0; i < V; i++) {
-        for (j = 0; j < V; j++) {
-            scanf("%d", adjacency_matrix[i] + j);
-        }
+    for (i = 0; i < E; i++) {
+        scanf("%d %d %d", &from, &to, &weight);
+        adjacency_matrix[from][to] = weight;
     }
     return adjacency_matrix;
 }
@@ -124,22 +125,22 @@ int free_arrays(int n, int*** previous, int*** distances) {
 
 
 int main(void) {
-    int n;
-    int k;
+    int V;
+    int E;
+    int s;
+    int t;
     int m;
     int i;
     int j;
-    scanf("%d %d %d", &n, &k, &m);
-    int** adjacency_matrix = set_adjacency_matrix(n);
+    scanf("%d %d %d %d", &V, &E, &s, &t);
+    int** adjacency_matrix = set_adjacency_matrix(V, E);
     int** distances;
     int** previous;
-    set_arrays(n, adjacency_matrix, &previous, &distances);
-    Floyd_Warshall_algorithm(adjacency_matrix, n, distances, previous);
-    int from = -1;
-    int to = -1;
-    get_min_distance(n, m, k, distances, &from, &to);
+    set_arrays(V, adjacency_matrix, &previous, &distances);
+    Ford_Fulkerson_algorithm(adjacency_matrix, V, distances, previous);
+
     printf("%d %d", from, to);
-    free_adjacency_matrix(&adjacency_matrix, n);
-    free_arrays(n, &previous, &distances);
+    free_adjacency_matrix(&adjacency_matrix, V);
+    free_arrays(V, &previous, &distances);
     return 0;
 }
