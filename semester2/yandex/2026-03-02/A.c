@@ -102,8 +102,6 @@ int free_adjacency_matrix(int*** adjacency_matrix, int V) {
 }
 
 
-
-
 int set_arrays(int V, int** adjacency_matrix, int** visited, int*** path) {
     if (!adjacency_matrix || !visited) {
         return -1;
