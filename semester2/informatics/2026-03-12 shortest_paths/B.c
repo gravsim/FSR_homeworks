@@ -11,45 +11,6 @@ typedef struct Edge {
 } Edge;
 
 
-int swap_int_pointers(int** a, int** b) {
-    if (!a || !b) {
-        return -1;
-    }
-    int* tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
-int swap_int(int* a, int* b) {
-    if (!a || !b) {
-        return -1;
-    }
-    int tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
-int get_minimal_weight(int** distances, int* visited, int V) {
-    if (!distances || !visited) {
-        return -1;
-    }
-    int i = 0;
-    int minimum = INT_MAX;
-    int min_index = -1;
-    for (i = 0; i < V; i++) {
-        if (!visited[i] && distances[i][1] < minimum) {
-            minimum = distances[i][1];
-            min_index = i;
-        }
-    }
-    return min_index;
-}
-
-
 Edge** set_adjacency_list(int V, int M) {
     int i;
     int j;
@@ -77,6 +38,31 @@ Edge** set_adjacency_list(int V, int M) {
         }
     }
     return adjacency_list;
+}
+
+
+void free_list(Edge** head) {
+    Edge* current = *head;
+    Edge* next;
+    while (current) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    *head = NULL;
+}
+
+
+int free_adjacency_list(Edge** adjacency_list, int V) {
+    if (!adjacency_list) {
+        return -1;
+    }
+    int i;
+    for (i = 0; i < V; i++) {
+        free_list(adjacency_list + i);
+    }
+    free(adjacency_list);
+    return 1;
 }
 
 
@@ -166,8 +152,8 @@ int init_heap(Heap** heap) {
 }
 
 
-int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int V, int* distances, int* visited) {
-    if (!adjacency_list || !visited || !distances) {
+int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances) {
+    if (!adjacency_list || !distances) {
         return -1;
     }
     int v;
@@ -200,28 +186,24 @@ int main(void) {
     int i;
     scanf("%d %d %d", &V, &to, &trains);
     to--;
-    Edge** adjacency_matrix = set_adjacency_list(V, trains);
-
+    Edge** adjacency_list = set_adjacency_list(V, trains);
     int* distances = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
         distances[i] = INT_MAX;
     }
     distances[0] = 0;
-    int* visited = calloc(V, sizeof(int));
     Heap* heap;
     init_heap(&heap);
     push(heap, 0, 0);
-    Dijkstra_algorithm(heap, adjacency_matrix, V, distances, visited);
-    // printf("\n");
-    // for (i = 0; i < V; i++) {
-    //     printf("%d ", distances[i]);
-    // }
-    // printf("\n");
+    Dijkstra_algorithm(heap, adjacency_list, distances);
     if (distances[to] == INT_MAX) {
         printf("-1");
     } else {
         printf("%d", distances[to]);
     }
-
+    free_adjacency_list(adjacency_list, V);
+    free(distances);
+    free(heap->values);
+    free(heap);
     return 0;
 }
