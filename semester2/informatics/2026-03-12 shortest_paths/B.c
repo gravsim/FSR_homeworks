@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#define MAX_WEIGHT 1000
+#include <limits.h>
 
 
 typedef struct Edge {
@@ -39,7 +38,7 @@ int get_minimal_weight(int** distances, int* visited, int V) {
         return -1;
     }
     int i = 0;
-    int minimum = MAX_WEIGHT;
+    int minimum = INT_MAX;
     int min_index = -1;
     for (i = 0; i < V; i++) {
         if (!visited[i] && distances[i][1] < minimum) {
@@ -74,6 +73,7 @@ Edge** set_adjacency_list(int V, int M) {
             adjacency_list[from] = edge1;
             edge1->to = to;
             from = to;
+            from_time = to_time;
         }
     }
     return adjacency_list;
@@ -173,19 +173,15 @@ int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int V, int* distances,
     int v;
     int w;
     int value;
-    int delta_time;
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
-        visited[v] = 1;
         Edge* current = adjacency_list[v];
         while (current) {
             w = current->to;
-            delta_time = current->to_time - current->from_time;
-            if (current->from_time > distances[v] &&
-                !visited[w]
+            if (current->from_time >= distances[v]
             && current->to_time < distances[w]) {
                 distances[w] = current->to_time;
                 push(heap, w, current->to_time);
@@ -208,7 +204,7 @@ int main(void) {
 
     int* distances = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
-        distances[i] = MAX_WEIGHT;
+        distances[i] = INT_MAX;
     }
     distances[0] = 0;
     int* visited = calloc(V, sizeof(int));
@@ -221,7 +217,7 @@ int main(void) {
     //     printf("%d ", distances[i]);
     // }
     // printf("\n");
-    if (distances[to] == MAX_WEIGHT) {
+    if (distances[to] == INT_MAX) {
         printf("-1");
     } else {
         printf("%d", distances[to]);
