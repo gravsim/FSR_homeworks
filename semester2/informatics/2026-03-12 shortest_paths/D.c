@@ -111,7 +111,7 @@ void expand(Heap* heap) {
 
 
 int sift_up(Heap* heap, int index) {
-    while (index > 0 && heap->values[index].weight < heap->values[(index - 1) / 2].weight) {
+    while (index > 0 && heap->values[index].weight > heap->values[(index - 1) / 2].weight) {
         swap_nodes(heap->values + index, heap->values + (index - 1) / 2);
         index = (index - 1) / 2;
     }
@@ -121,10 +121,10 @@ int sift_up(Heap* heap, int index) {
 
 int sift_down(Heap* heap, int index) {
     int max_index = index;
-    if (2 * index + 2 < heap->size && heap->values[2 * index + 2].weight < heap->values[max_index].weight) {
+    if (2 * index + 2 < heap->size && heap->values[2 * index + 2].weight > heap->values[max_index].weight) {
         max_index = 2 * index + 2;
     }
-    if (2 * index + 1 < heap->size && heap->values[2 * index + 1].weight < heap->values[max_index].weight) {
+    if (2 * index + 1 < heap->size && heap->values[2 * index + 1].weight > heap->values[max_index].weight) {
         max_index = 2 * index + 1;
     }
     if (max_index != index) {
@@ -147,7 +147,7 @@ int push(Heap* heap, int index, int value) {
 }
 
 
-int pop_minimum(Heap* heap, int* index, int* value) {
+int pop_maximum(Heap* heap, int* index, int* value) {
     *value = heap->values[0].weight;
     *index = heap->values[0].index;
     heap->values[0] = heap->values[--heap->size];
@@ -174,7 +174,7 @@ int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* v
     int new_cups;
     int new_time;
     while (heap->size > 0) {
-        pop_minimum(heap, &v, &value);
+        pop_maximum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
@@ -187,7 +187,7 @@ int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* v
                 new_time = times[v] + current->time;
                 if (!visited[w]
                     && new_time <= MAX_TIME
-                && new_cups >= distances[w]) {
+                && (new_cups > distances[w] || (new_cups == distances[w] && new_time < times[w]))) {
                     distances[w] = new_cups;
                     times[w] = new_time;
                     push(heap, w, distances[w]);
@@ -216,6 +216,9 @@ int main(void) {
     }
     int* visited = calloc(V, sizeof(int));
     int* times = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
+        times[i] = INT_MAX;
+    }
     distances[0] = INT_MAX;
     Heap* heap;
     init_heap(&heap);
