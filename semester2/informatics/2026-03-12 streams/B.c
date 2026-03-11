@@ -3,49 +3,6 @@
 #include <limits.h>
 
 
-
-int is_smaller(long* a, long* b) {
-    if (a[0] != b[0]) {
-        return a[0] < b[0];
-    }
-    if (a[1] != b[1]) {
-        return a[1] < b[1];
-    }
-    return 0;
-}
-
-
-void swap(long* a, long* b) {
-    long tmp = a[0];
-    a[0] = b[0];
-    b[0] = tmp;
-
-    tmp = a[1];
-    a[1] = b[1];
-    b[1] = tmp;
-}
-
-
-void quick_sort(long** array, long size){
-    long down = 0;
-    long up = size - 1;
-    long pivot[2] = {array[size / 2][0], array[size / 2][1]};
-    if (size > 1){
-        while (down <= up){
-            while (is_smaller(array[down], pivot)) down++;
-            while (is_smaller(pivot, array[up])) up--;
-            if (down <= up){
-                swap(array[down], array[up]);
-                down++;
-                up--;
-            }
-        }
-        quick_sort(array, up + 1);
-        quick_sort(array + down, size - down);
-    }
-}
-
-
 int DFS_recursive(int** adjacency_matrix,
                     int* visited,
                     int current,
@@ -115,27 +72,18 @@ int Ford_Fulkerson_algorithm(int** adjacency_matrix, int V, int s, int t, int* v
 }
 
 
-int find_point(long x, long y) {
-
-}
-
-
-int** set_adjacency_matrix(int E, int* V) {
+int** set_adjacency_matrix(int V) {
     int i;
-    int from;
-    int to;
-    int weight;
-    int x;
-    int y;
-    for (i = 0; i < E; i++) {
-        scanf("%d %d", &x, &y);
-        adjacency_matrix[from][to] = weight;
-    }
+    int j;
     int** adjacency_matrix = calloc(V, sizeof(int*));
     for (i = 0; i < V; i++) {
         adjacency_matrix[i] = calloc(V, sizeof(int));
     }
-
+    for (i = 0; i < V; i++) {
+        for (j = 0; j < V; j++) {
+            scanf("%d", adjacency_matrix[i] + j);
+        }
+    }
     return adjacency_matrix;
 }
 
@@ -158,6 +106,7 @@ int set_arrays(int V, int** adjacency_matrix, int** visited, int*** path) {
         return -1;
     }
     int i;
+    int j;
     *visited = calloc(V, sizeof(int));
     *path = calloc(V, sizeof(int*));
     for (i = 0; i < V; i++) {
@@ -181,22 +130,15 @@ int free_arrays(int V, int** visited, int*** path) {
 }
 
 
-
 int main(void) {
     int V;
     int E;
     int s;
     int t;
     int i;
-    scanf("%d", &E);
-    long** edges = calloc(E, sizeof(long*));
-    for (i = 0; i < E; i++) {
-        edges[i] = calloc(2, sizeof(long));
-        scanf("%ld %ld", edges[i], edges[i] + 1);
-    }
-    quick_sort(edges, E);
-    int** adjacency_matrix = set_adjacency_matrix(E, &V);
-    scanf("%d %d", &s, &t);
+    scanf("%d", &V);
+
+    int** adjacency_matrix = set_adjacency_matrix(V);
     int* visited;
     int** path;
     set_arrays(V, adjacency_matrix, &visited, &path);
