@@ -4,14 +4,24 @@
 
 #define CUP_WEIGHT 100
 #define TRUCK_WEIGHT 3000000
+#define MAX_TIME 1440
 
 
 typedef struct Edge {
     int connected_vertex;
     int time;
-    int max_weight;
+    int cups_amount;
     struct Edge* next;
 } Edge;
+
+
+
+int min(int a, int b) {
+    if (a < b) {
+        return a;
+    }
+    return b;
+}
 
 
 Edge** set_adjacency_list(int V, int E) {
@@ -27,14 +37,14 @@ Edge** set_adjacency_list(int V, int E) {
         vertex2--;
         Edge* edge1 = malloc(sizeof(Edge));
         edge1->time = time;
-        edge1->max_weight = max_weight;
+        edge1->cups_amount = (max_weight - TRUCK_WEIGHT) / CUP_WEIGHT;
         edge1->next = adjacency_list[vertex1];
         adjacency_list[vertex1] = edge1;
         edge1->connected_vertex = vertex2;
 
         Edge* edge2 = malloc(sizeof(Edge));
         edge2->time = time;
-        edge2->max_weight = max_weight;
+        edge2->cups_amount = (max_weight - TRUCK_WEIGHT) / CUP_WEIGHT;
         edge2->next = adjacency_list[vertex2];
         adjacency_list[vertex2] = edge2;
         edge2->connected_vertex = vertex1;
@@ -154,28 +164,36 @@ int init_heap(Heap** heap) {
 }
 
 
-int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* visited) {
-    if (!adjacency_list || !distances || !visited) {
+int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* visited, int* times) {
+    if (!adjacency_list || !distances || !visited || !times) {
         return -1;
     }
     int v;
     int w;
     int value;
+    int new_cups;
+    int new_time;
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
-        visited[v] = 1;
-        Edge* current = adjacency_list[v];
-        while (current) {
-            w = current->connected_vertex;
-            if (!visited[w]
-            && distances[v] + current->time < distances[w]) {
-                distances[w] = distances[v] + current->time;
-                push(heap, w, distances[w]);
+        if (!visited[v]) {
+            visited[v] = 1;
+            Edge* current = adjacency_list[v];
+            while (current) {
+                w = current->connected_vertex;
+                new_cups = min(distances[v], current->cups_amount);
+                new_time = times[v] + current->time;
+                if (!visited[w]
+                    && new_time <= MAX_TIME
+                && new_cups >= distances[w]) {
+                    distances[w] = new_cups;
+                    times[w] = new_time;
+                    push(heap, w, distances[w]);
+                }
+                current = current->next;
             }
-            current = current->next;
         }
     }
     return 1;
@@ -194,15 +212,16 @@ int main(void) {
     }
     int* distances = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
-        distances[i] = INT_MAX;
+        distances[i] = 0;
     }
     int* visited = calloc(V, sizeof(int));
-    distances[0] = 0;
+    int* times = calloc(V, sizeof(int));
+    distances[0] = INT_MAX;
     Heap* heap;
     init_heap(&heap);
-    push(heap, 0, 0);
-    Dijkstra_algorithm(heap, adjacency_list, distances, visited);
-    if (distances[V-1] == INT_MAX) {
+    push(heap, 0, INT_MAX);
+    Dijkstra_algorithm(heap, adjacency_list, distances, visited, times);
+    if (distances[V-1] == 0) {
         printf("-1");
     } else {
         printf("%d", distances[V-1]);
