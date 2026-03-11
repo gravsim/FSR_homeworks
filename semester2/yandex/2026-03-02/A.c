@@ -61,7 +61,7 @@ int Ford_Fulkerson_algorithm(int** adjacency_matrix, int V, int s, int t, int* v
             u = path[i][0];
             v = path[i][1];
             adjacency_matrix[u][v] -= minimal_edge;
-            adjacency_matrix[v][u] -= minimal_edge;
+            adjacency_matrix[v][u] += minimal_edge;
         }
         size = 0;
         clear_visited(visited, V);
@@ -146,7 +146,7 @@ int main(void) {
         int sum = 0;
         for (i = 0; i < V; i++) {
             if (adjacency_matrix[t][i]) {
-                sum -= adjacency_matrix[t][i];
+                sum += adjacency_matrix[t][i];
             }
         }
         printf("%d", sum);
