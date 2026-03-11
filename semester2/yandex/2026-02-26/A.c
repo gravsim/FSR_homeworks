@@ -24,7 +24,7 @@ int Floyd_Warshall_algorithm(int** adjacency_matrix, int n, int** distances, int
 }
 
 
-int** set_adjacency_matrix(int V) {
+int** allocate_adjacency_matrix(int V) {
     int i;
     int j;
     int** adjacency_matrix = calloc(V, sizeof(int*));
@@ -130,7 +130,7 @@ int main(void) {
     int i;
     int j;
     scanf("%d %d %d", &n, &k, &m);
-    int** adjacency_matrix = set_adjacency_matrix(n);
+    int** adjacency_matrix = allocate_adjacency_matrix(n);
     int** distances;
     int** previous;
     set_arrays(n, adjacency_matrix, &previous, &distances);

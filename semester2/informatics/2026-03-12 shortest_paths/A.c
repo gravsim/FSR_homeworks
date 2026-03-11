@@ -134,7 +134,7 @@ int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int V, int* distanc
 }
 
 
-int** set_adjacency_matrix(int N) {
+int** allocate_adjacency_matrix(int N) {
     int i;
     int j;
     int** adjacency_matrix = calloc(N, sizeof(int*));
@@ -171,7 +171,7 @@ int main(void) {
     scanf("%d %d %d", &N, &from, &to);
     from--;
     to--;
-    int** adjacency_matrix = set_adjacency_matrix(N);
+    int** adjacency_matrix = allocate_adjacency_matrix(N);
     int* previous = calloc(N, sizeof(int));
     for (i = 0; i < N; i++) {
         previous[i] = -1;
