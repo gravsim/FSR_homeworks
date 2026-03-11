@@ -5,6 +5,7 @@
 #define CUP_WEIGHT 100
 #define TRUCK_WEIGHT 3000000
 #define MAX_TIME 1440
+#define ORDER 10000000
 
 
 typedef struct Edge {
@@ -13,7 +14,6 @@ typedef struct Edge {
     int cups_amount;
     struct Edge* next;
 } Edge;
-
 
 
 int min(int a, int b) {
@@ -82,7 +82,7 @@ void expand(Heap* heap) {
 
 
 int sift_up(Heap* heap, int index) {
-    while (index > 0 && heap->values[index].weight > heap->values[(index - 1) / 2].weight) {
+    while (index > 0 && heap->values[index].weight < heap->values[(index - 1) / 2].weight) {
         swap_nodes(heap->values + index, heap->values + (index - 1) / 2);
         index = (index - 1) / 2;
     }
@@ -92,10 +92,10 @@ int sift_up(Heap* heap, int index) {
 
 int sift_down(Heap* heap, int index) {
     int max_index = index;
-    if (2 * index + 2 < heap->size && heap->values[2 * index + 2].weight > heap->values[max_index].weight) {
+    if (2 * index + 2 < heap->size && heap->values[2 * index + 2].weight < heap->values[max_index].weight) {
         max_index = 2 * index + 2;
     }
-    if (2 * index + 1 < heap->size && heap->values[2 * index + 1].weight > heap->values[max_index].weight) {
+    if (2 * index + 1 < heap->size && heap->values[2 * index + 1].weight < heap->values[max_index].weight) {
         max_index = 2 * index + 1;
     }
     if (max_index != index) {
@@ -118,7 +118,7 @@ int push(Heap* heap, int index, int value) {
 }
 
 
-int pop_maximum(Heap* heap, int* index, int* value) {
+int pop_minimum(Heap* heap, int* index, int* value) {
     *value = heap->values[0].weight;
     *index = heap->values[0].index;
     heap->values[0] = heap->values[--heap->size];
@@ -144,8 +144,11 @@ Edge** set_adjacency_list(int V, int E, int* max_cups) {
     int cups;
     Edge** adjacency_list = calloc(V, sizeof(Edge*));
     for (i = 0; i < E; i++) {
+        scanf("%d %d %d %d", &vertex1, &vertex2, &time, &max_weight);
         cups = (max_weight - TRUCK_WEIGHT) / CUP_WEIGHT;
-        scanf("%d %d %d %d", vertex1, vertex2, time, max_weight);
+        if (cups > *max_cups) {
+            *max_cups = cups;
+        }
         vertex1--;
         vertex2--;
         Edge* edge1 = malloc(sizeof(Edge));
@@ -161,25 +164,20 @@ Edge** set_adjacency_list(int V, int E, int* max_cups) {
         edge2->next = adjacency_list[vertex2];
         adjacency_list[vertex2] = edge2;
         edge2->connected_vertex = vertex1;
-        if (cups > *max_cups) {
-            *max_cups = cups;
-        }
     }
     return adjacency_list;
 }
 
 
-int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* visited, int* times, int middle) {
-    if (!adjacency_list || !distances || !visited || !times) {
+int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* visited, int* times, int middle) {
+    if (!adjacency_list || !visited || !times) {
         return -1;
     }
     int v;
     int w;
     int value;
-    int new_cups;
-    int new_time;
     while (heap->size > 0) {
-        pop_maximum(heap, &v, &value);
+        pop_minimum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
@@ -187,16 +185,14 @@ int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* v
             visited[v] = 1;
             Edge* current = adjacency_list[v];
             while (current) {
-                if (current->cups_amount > middle) {
+                if (current->cups_amount >= middle) {
                     w = current->connected_vertex;
-                    new_cups = min(distances[v], current->cups_amount);
-                    new_time = times[v] + current->time;
                     if (!visited[w]
-                    && new_time <= MAX_TIME
-                    && (new_cups > distances[w] || (new_cups == distances[w] && new_time < times[w]))) {
-                        distances[w] = new_cups;
-                        times[w] = new_time;
-                        push(heap, w, distances[w]);
+                    && current->cups_amount >= middle
+                    && times[v] + current->time < times[w]
+                    ) {
+                        times[w] = times[v] + current->time;
+                        push(heap, w, times[w]);
                     }
                 }
                 current = current->next;
@@ -205,7 +201,6 @@ int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* v
     }
     return 1;
 }
-
 
 
 int fits(int V, Edge** adjacency_list, int middle) {
@@ -219,13 +214,13 @@ int fits(int V, Edge** adjacency_list, int middle) {
     for (i = 0; i < V; i++) {
         times[i] = INT_MAX;
     }
-    distances[0] = INT_MAX;
+    distances[0] = 0;
     times[0] = 0;
     Heap* heap;
     init_heap(&heap);
-    push(heap, 0, INT_MAX);
-    Dijkstra_algorithm(heap, adjacency_list, distances, visited, times, middle);
-    int status = times[V-1] <= MAX_TIME && distances[V-1] >= 0;
+    push(heap, 0, 0);
+    Dijkstra_algorithm(heap, adjacency_list, visited, times, middle);
+    int status = times[V-1] <= MAX_TIME;
     free(visited);
     free(distances);
     free(heap->values);
@@ -237,11 +232,13 @@ int fits(int V, Edge** adjacency_list, int middle) {
 int main(void) {
     int V;
     int E;
-    int i;
     int max_cups = 0;
     scanf("%d %d", &V, &E);
+    if (V == 1) {
+        printf("%d", ORDER);
+        return 0;
+    }
     Edge** adjacency_list = set_adjacency_list(V, E, &max_cups);
-    max_cups = 0;
     int left = 0;
     int right = max_cups;
     int middle;
