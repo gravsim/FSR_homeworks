@@ -206,10 +206,6 @@ int main(void) {
     int i;
     scanf("%d %d", &V, &E);
     Edge** adjacency_list = set_adjacency_list(V, E);;
-    int* previous = calloc(V, sizeof(int));
-    for (i = 0; i < V; i++) {
-        previous[i] = -1;
-    }
     int* distances = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
         distances[i] = 0;
@@ -220,6 +216,7 @@ int main(void) {
         times[i] = INT_MAX;
     }
     distances[0] = INT_MAX;
+    times[0] = 0;
     Heap* heap;
     init_heap(&heap);
     push(heap, 0, INT_MAX);
@@ -230,5 +227,7 @@ int main(void) {
         printf("%d", distances[V-1]);
     }
     free_adjacency_list(adjacency_list, V);
+    free(heap->values);
+    free(heap);
     return 0;
 }
