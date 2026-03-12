@@ -4,6 +4,13 @@
 #include <limits.h>
 
 
+typedef struct Edge {
+    int weight;
+    int index;
+    int connected_vertex;
+    struct Edge* next;
+} Edge;
+
 
 int min(int a, int b) {
     if (a < b) {
@@ -13,15 +20,27 @@ int min(int a, int b) {
 }
 
 
-int free_adjacency_matrix(int** adjacency_matrix, int N) {
-    if (!adjacency_matrix) {
+void free_list(Edge** head) {
+    Edge* current = *head;
+    Edge* next;
+    while (current) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    *head = NULL;
+}
+
+
+int free_adjacency_list(Edge** adjacency_list, int V) {
+    if (!adjacency_list) {
         return -1;
     }
     int i;
-    for (i = 0; i < N; i++) {
-        free(adjacency_matrix[i]);
+    for (i = 0; i < V; i++) {
+        free_list(adjacency_list + i);
     }
-    free(adjacency_matrix);
+    free(adjacency_list);
     return 1;
 }
 
@@ -112,23 +131,31 @@ int init_heap(Heap** heap) {
 }
 
 
-int** set_adjacency_matrix(int V) {
+Edge** set_adjacency_list(int V) {
     int i;
     int vertex1;
     int vertex2;
     int weight;
-    int** adjacency_matrix = calloc(V, sizeof(int*));
-    for (i = 0; i < V; i++) {
-        adjacency_matrix[i] = calloc(V, sizeof(int));
-    }
+    Edge** adjacency_list = calloc(V, sizeof(Edge*));
     for (i = 0; i < V - 1; i++) {
         scanf("%d %d %d", &vertex1, &vertex2, &weight);
         vertex1--;
         vertex2--;
-        adjacency_matrix[vertex1][vertex2] = weight;
-        adjacency_matrix[vertex2][vertex1] = weight;
+        Edge* edge1 = malloc(sizeof(Edge));
+        edge1->weight = weight;
+        edge1->index = i;
+        edge1->next = adjacency_list[vertex1];
+        adjacency_list[vertex1] = edge1;
+        edge1->connected_vertex = vertex2;
+
+        Edge* edge2 = malloc(sizeof(Edge));
+        edge2->weight = weight;
+        edge2->index = i;
+        edge2->next = adjacency_list[vertex2];
+        adjacency_list[vertex2] = edge2;
+        edge2->connected_vertex = vertex1;
     }
-    return adjacency_matrix;
+    return adjacency_list;
 }
 
 
@@ -169,8 +196,8 @@ int strong_Dijkstra_algorithm(Heap* heap,
 }
 
 
-int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int V, int* distances, int* visited) {
-    if (!adjacency_matrix || !visited || !distances) {
+int Dijkstra_s_algorithm(Heap* heap, Edge** adjacency_list, int* distances, int* visited) {
+    if (!adjacency_list || !visited || !distances) {
         return -1;
     }
     int v;
@@ -182,21 +209,23 @@ int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int V, int* distanc
             return -1;
         }
         visited[v] = 1;
-        for (w = 0; w < V; w++) {
-            if (adjacency_matrix[v][w] > 0
-            && !visited[w]
-            && distances[v] + adjacency_matrix[v][w] < distances[w]) {
-                distances[w] = distances[v] + adjacency_matrix[v][w];
-                push(heap, w, distances[v] + adjacency_matrix[v][w]);
+        Edge* current = adjacency_list[v];
+        while (current) {
+            w = current->connected_vertex;
+            if (!visited[w]
+            && distances[v] + current->weight < distances[w]) {
+                distances[w] = distances[v] + current->weight;
+                push(heap, w, distances[w]);
             }
+            current = current->next;
         }
     }
     return 1;
 }
 
 
-int set_arrays(int n, int** adjacency_matrix, int*** Floyd_distances) {
-    if (!adjacency_matrix || !Floyd_distances) {
+int set_arrays(int n, int*** Floyd_distances) {
+    if (!Floyd_distances) {
         return -1;
     }
     int i;
@@ -279,24 +308,24 @@ int main(void) {
         distances[i] = DBL_MAX;
         next[i] = -1;
     }
-    int** adjacency_matrix = set_adjacency_matrix(V);
+    Edge** adjacency_list = set_adjacency_list(V);
     distances[0] = 0.0;
     preparation_times[0] = 0;
     int** Floyd_distances;
-    set_arrays(V, adjacency_matrix, &Floyd_distances);
+    set_arrays(V, &Floyd_distances);
     Heap* heap;
     init_heap(&heap);
     push(heap, 0, 0);
     for (i = 0; i < V; i++) {
         init_heap(&heap);
         push(heap, i, 0);
-        Dijkstra_s_algorithm(heap, adjacency_matrix, V, Floyd_distances[i], visited);
+        Dijkstra_s_algorithm(heap, adjacency_list, Floyd_distances[i], visited);
         free_heap(heap);
         clear_visited(visited, V);
     }
     init_heap(&heap);
     push(heap, 0, 0);
-    free_adjacency_matrix(adjacency_matrix, V);
+    free_adjacency_list(adjacency_list, V);
     strong_Dijkstra_algorithm(heap, V, distances, visited, next, preparation_times, speeds, Floyd_distances);
     print_answer(V, distances, next);
     return 0;
