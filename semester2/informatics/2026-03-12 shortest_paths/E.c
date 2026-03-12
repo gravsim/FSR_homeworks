@@ -24,27 +24,15 @@ int min(int a, int b) {
 }
 
 
-void free_list(Edge** head) {
-    Edge* current = *head;
-    Edge* next;
-    while (current) {
-        next = current->next;
-        free(current);
-        current = next;
-    }
-    *head = NULL;
-}
-
-
-int free_adjacency_list(Edge** adjacency_list, int V) {
-    if (!adjacency_list) {
+int free_adjacency_matrix(int** adjacency_matrix, int N) {
+    if (!adjacency_matrix) {
         return -1;
     }
     int i;
-    for (i = 0; i < V; i++) {
-        free_list(adjacency_list + i);
+    for (i = 0; i < N; i++) {
+        free(adjacency_matrix[i]);
     }
-    free(adjacency_list);
+    free(adjacency_matrix);
     return 1;
 }
 
@@ -135,37 +123,39 @@ int init_heap(Heap** heap) {
 }
 
 
-
-Edge** set_adjacency_list(int V) {
+int** set_adjacency_matrix(int V) {
     int i;
     int vertex1;
     int vertex2;
     int weight;
-    Edge** adjacency_list = calloc(V, sizeof(Edge*));
+    int** adjacency_matrix = calloc(V, sizeof(int*));
+    for (i = 0; i < V; i++) {
+        adjacency_matrix[i] = calloc(V, sizeof(int));
+    }
     for (i = 0; i < V - 1; i++) {
         scanf("%d %d %d", &vertex1, &vertex2, &weight);
         vertex1--;
         vertex2--;
-        Edge* edge1 = malloc(sizeof(Edge));
-        edge1->weight = weight;
-        edge1->index = i;
-        edge1->next = adjacency_list[vertex1];
-        adjacency_list[vertex1] = edge1;
-        edge1->connected_vertex = vertex2;
-
-        Edge* edge2 = malloc(sizeof(Edge));
-        edge2->weight = weight;
-        edge2->index = i;
-        edge2->next = adjacency_list[vertex2];
-        adjacency_list[vertex2] = edge2;
-        edge2->connected_vertex = vertex1;
+        adjacency_matrix[vertex1][vertex2] = weight;
+        adjacency_matrix[vertex2][vertex1] = weight;
     }
-    return adjacency_list;
+    return adjacency_matrix;
 }
 
 
-int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* visited, int* times, int middle) {
-    if (!adjacency_list || !visited || !times) {
+
+
+
+
+int Dijkstra_algorithm(Heap* heap,
+    int** adjacency_matrix,
+    int V,
+    int* distances,
+    int* visited,
+    int* previous,
+    int* preparation_times,
+    int* speeds) {
+    if (!adjacency_matrix || !visited || !distances || !previous) {
         return -1;
     }
     int v;
@@ -178,19 +168,14 @@ int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* visited, int* tim
         }
         if (!visited[v]) {
             visited[v] = 1;
-            Edge* current = adjacency_list[v];
-            while (current) {
-                if (current->cups_amount >= middle) {
-                    w = current->connected_vertex;
-                    if (!visited[w]
-                    && current->cups_amount >= middle
-                    && times[v] + current->time < times[w]
-                    ) {
-                        times[w] = times[v] + current->time;
-                        push(heap, w, times[w]);
-                    }
+            for (w = 0; w < V; w++) {
+                if (adjacency_matrix[v][w] != -1
+                && !visited[w]
+                && distances[v] + adjacency_matrix[v][w] < distances[w]) {
+                    distances[w] = distances[v] + adjacency_matrix[v][w];
+                    previous[w] = v;
+                    push(heap, w, distances[v] + adjacency_matrix[v][w]);
                 }
-                current = current->next;
             }
         }
     }
@@ -198,48 +183,91 @@ int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int* visited, int* tim
 }
 
 
-int fits(int V, Edge** adjacency_list, int middle) {
+int Floyd_Warshall_algorithm(int** adjacency_matrix, int n, int** distances, int** previous) {
+    if (!adjacency_matrix || !distances || !previous) {
+        return -1;
+    }
     int i;
-    int* distances = calloc(V, sizeof(int));
-    for (i = 0; i < V; i++) {
-        distances[i] = 0;
+    int j;
+    int k;
+    for (k = 0; k < n - 1; k++) {
+        for (i = 0; i < n; i++) {
+            for (j = 0; j < n; j++) {
+                if (distances[i][j] > distances[i][k] + distances[k][j]) {
+                    distances[i][j] = distances[i][k] + distances[k][j];
+                    previous[i][j] = previous[k][j];
+                }
+            }
+        }
     }
-    int* visited = calloc(V, sizeof(int));
-    int* times = calloc(V, sizeof(int));
-    for (i = 0; i < V; i++) {
-        times[i] = INT_MAX;
-    }
-    distances[0] = 0;
-    times[0] = 0;
-    Heap* heap;
-    init_heap(&heap);
-    push(heap, 0, 0);
+    return 1;
+}
 
-    int status = times[V-1] <= MAX_TIME;
-    free(visited);
-    free(distances);
-    free(heap->values);
-    free(heap);
-    return status;
+
+
+int set_arrays(int n, int** adjacency_matrix, int*** previous, int*** distances) {
+    if (!adjacency_matrix || !previous || !distances) {
+        return -1;
+    }
+    int i;
+    int j;
+    *previous = calloc(n, sizeof(int*));
+    for (i = 0; i < n; i++) {
+        (*previous)[i] = calloc(n, sizeof(int));
+        for (j = 0; j < n; j++) {
+            if (adjacency_matrix[i][j]) {
+                (*previous)[i][j] = i;
+            } else {
+                (*previous)[i][j] = -1;
+            }
+
+        }
+    }
+    *distances = calloc(n, sizeof(int*));
+    for (i = 0; i < n; i++) {
+        (*distances)[i] = calloc(n, sizeof(int));
+        for (j = 0; j < n; j++) {
+            if (i == j) {
+                (*distances)[i][j] = 0;
+            } else if (adjacency_matrix[i][j]) {
+                (*distances)[i][j] = adjacency_matrix[i][j];
+            } else {
+                (*distances)[i][j] = INT_MAX;
+            }
+        }
+    }
+    return 1;
 }
 
 
 int main(void) {
     int V;
-    int E;
-    int max_cups = 0;
     int i;
     scanf("%d", &V);
-    int* times = calloc(V, sizeof(int));
+    int* preparation_times = calloc(V, sizeof(int));
     int* speeds = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
-        scanf("%d %d", times + i, speeds + i);
+        scanf("%d %d", preparation_times + i, speeds + i);
     }
-    Edge** adjacency_list = set_adjacency_list(V);
+    int** adjacency_matrix = set_adjacency_matrix(V);
+    int* distances = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
+        distances[i] = 0;
+    }
+    int* visited = calloc(V, sizeof(int));
+    int* previous = calloc(V, sizeof(int));
+    distances[0] = 0;
+    preparation_times[0] = 0;
 
-    int middle;
+    int** Floyd_distances;
+    int** Floyd_previous;
+    set_arrays(V, adjacency_matrix, &Floyd_previous, &Floyd_distances);
+    Floyd_Warshall_algorithm(adjacency_matrix, V, Floyd_distances, Floyd_previous);
+    Heap* heap;
+    init_heap(&heap);
+    push(heap, 0, 0);
     int result = 0;
-    Dijkstra_algorithm(heap, adjacency_list, visited, times, middle);
+    Dijkstra_algorithm(heap, adjacency_matrix, V, distances, visited, previous, preparation_times, speeds);
     printf("%d", result);
     free_adjacency_list(adjacency_list, V);
     return 0;
