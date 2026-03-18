@@ -1,8 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
 #include <math.h>
-
 
 
 int double_zero(double a) {
@@ -11,7 +8,6 @@ int double_zero(double a) {
 
 
 int main(void) {
-
     double A;
     double B;
     double C;
@@ -25,7 +21,6 @@ int main(void) {
     } else {
         new_C = C + B * R / cos(atan(A / B));
     }
-
     printf("%lf %lf %lf", A, B, new_C);
     return 0;
 }
