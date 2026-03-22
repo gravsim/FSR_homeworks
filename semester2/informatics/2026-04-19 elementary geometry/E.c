@@ -33,8 +33,7 @@ vec2 subtract(vec2 vector1, vec2 vector2) {
 
 
 double distance(vec2 vector1, vec2 vector2) {
-    vec2 difference = subtract(vector2, vector1);
-    return get_norm(difference);
+    return get_norm(subtract(vector2, vector1));
 }
 
 
@@ -89,7 +88,7 @@ int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2)
             diff2 = subtract(vertices[i], point2);
             new_cos = get_cos(diff1, diff2);
             if (double_equal(max_cos, new_cos)) {
-                if (get_norm(diff2) > get_norm(subtract(point2, vertices[max_index]))) {
+                if (get_norm(diff2) > distance(point2, vertices[max_index])) {
                     max_index = i;
                 }
             } else if (new_cos > max_cos) {
