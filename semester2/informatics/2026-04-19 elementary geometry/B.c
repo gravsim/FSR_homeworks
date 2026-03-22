@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-20
+#define EPSILON 1e-10
 
 
 double norm(double* vector) {
@@ -22,21 +22,8 @@ double double_equal(double a, double b) {
 }
 
 
-void swap(double* a, double* b) {
-    double* tmp = a;
-    *a = *b;
-    *b = *tmp;
-}
-
-
-void check_points(double x1, double x2, double* max, double* min) {
-    if (x1 < x2) {
-        *max = x2;
-        *min = x1;
-    } else {
-        *max = x1;
-        *min = x2;
-    }
+int point_on_segment(double* A, double* B, double* point) {
+    return double_equal(distance(A, point) + distance(B, point), distance(A, B));
 }
 
 
@@ -45,7 +32,7 @@ int main(void) {
     double* B = malloc(2 * sizeof(double));
     double* point = malloc(2 * sizeof(double));
     scanf("%lf %lf %lf %lf %lf %lf", point, point + 1, A, A + 1, B, B + 1);
-    if (double_equal(distance(A, point) + distance(B, point), distance(A, B))) {
+    if (point_on_segment(A, B, point)) {
         printf("YES");
     } else {
         printf("NO");
