@@ -17,42 +17,38 @@ double double_equal(double a, double b) {
 }
 
 
-double get_norm(vec2* vector) {
-    return sqrt(vector->x * vector->x + vector->y * vector->y);
+double get_norm(vec2 vector) {
+    return sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
 
-vec2* normalize(vec2* vector) {
+vec2 normalize(vec2 vector) {
     vec2* difference = malloc(sizeof(vec2));
-    difference->x = vector->x / get_norm(vector);
-    difference->y = vector->y / get_norm(vector);
-    return difference;
+    difference->x = vector.x / get_norm(vector);
+    difference->y = vector.y / get_norm(vector);
+    return *difference;
 }
 
 
-vec2* subtract(vec2* vector1, vec2* vector2) {
-    vec2* difference = malloc(sizeof(vec2));
-    difference->x = vector1->x - vector2->x;
-    difference->y = vector1->y - vector2->y;
-    return difference;
+vec2 subtract(vec2 v1, vec2 v2) {
+    vec2 res = {v1.x - v2.x, v1.y - v2.y};
+    return res;
 }
 
 
-double distance(vec2* vector1, vec2* vector2) {
-    vec2* difference = subtract(vector2, vector1);
-    double norm = get_norm(difference);
-    free(difference);
-    return norm;
+double distance(vec2 vector1, vec2 vector2) {
+    vec2 difference = subtract(vector2, vector1);
+    return get_norm(difference);
 }
 
 
-double cross2(vec2* a, vec2* b) {
-    return a->x * b->y - a->y * b->x;
+double cross2(vec2 a, vec2 b) {
+    return a.x * b.y - a.y * b.x;
 }
 
 
-double dot(vec2* a, vec2* b) {
-    return a->x * b->x + a->y * b->y;
+double dot(vec2 a, vec2 b) {
+    return a.x * b.x + a.y * b.y;
 }
 
 
@@ -67,35 +63,33 @@ int int_sign(double a) {
 
 
 
-int vectors_sign(vec2* point, vec2* start, vec2* end) {
-    vec2* edge = subtract(end, start);
-    vec2* diff = subtract(point, start);
+int vectors_sign(vec2 point, vec2 start, vec2 end) {
+    vec2 edge = subtract(end, start);
+    vec2 diff = subtract(point, start);
     int result = int_sign(cross2(edge, diff));
-    free(edge);
-    free(diff);
     return result;
 }
 
 
-double get_cos(vec2* vector1, vec2* vector2) {
+double get_cos(vec2 vector1, vec2 vector2) {
     return dot(normalize(vector1), normalize(vector2));
 }
 
 
 
-int vec2_equal(vec2* vector1, vec2* vector2) {
-    return double_equal(vector1->x, vector2->x) && double_equal(vector1->y, vector2->y);
+int vec2_equal(vec2 vector1, vec2 vector2) {
+    return double_equal(vector1.x, vector2.x) && double_equal(vector1.y, vector2.y);
 }
 
 
-int get_max_cos_index(vec2* vertices, int vert_amount, vec2* point1, vec2* point2) {
+int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2) {
     int i;
     double max_cos = -2.;
     int max_index = -1;
     for (i = 0; i < vert_amount; i++) {
-        if (!vec2_equal(vertices + i, point2)) {
-            vec2* diff1 = subtract(point2, point1);
-            vec2* diff2 = subtract(vertices + i, point2);
+        if (!vec2_equal(vertices[i], point2)) {
+            vec2 diff1 = subtract(point2, point1);
+            vec2 diff2 = subtract(vertices[i], point2);
             double new_cos = get_cos(diff1, diff2);
             if (new_cos > max_cos) {
                 max_cos = new_cos;
@@ -127,13 +121,13 @@ void Jarvis_algotythm(int n, vec2* vertices, vec2* convex_vertices, int* convex_
 
     point2->x = point1->x;
     point2->y = point1->y - 0.1;
-    current = get_max_cos_index(vertices, n, point1, point2);
+    current = get_max_cos_index(vertices, n, *point1, *point2);
     do {
         convex_vertices[*convex_size] = vertices[current];
         (*convex_size)++;
         point1 = convex_vertices + (*convex_size-2);
         point2 = convex_vertices + (*convex_size-1);
-        current = get_max_cos_index(vertices, n, point1, point2);
+        current = get_max_cos_index(vertices, n, *point1, *point2);
     } while (current != -1 && current != min_index);
 }
 
@@ -152,16 +146,13 @@ int main(void) {
     }
     Jarvis_algotythm(n ,vertices, convex_vertices, &convex_size);
     int next;
-    vec2* edge = malloc(sizeof(vec2));
-    vec2* vector = malloc(sizeof(vec2));
+    vec2 edge;
+    vec2 vector;
     double t;
     for (i = 0; i < convex_size; i++) {
         next = (i + 1) % convex_size;
-        edge->x = convex_vertices[next].x - convex_vertices[i].x;
-        edge->y = convex_vertices[next].y - convex_vertices[i].y;
-
-        vector->x = barycenter->x - convex_vertices[i].x;
-        vector->y = barycenter->y - convex_vertices[i].y;
+        edge = subtract(convex_vertices[next], convex_vertices[i]);
+        vector = subtract(barycenter[next], convex_vertices[i]);
         t = dot(edge, vector) / dot(edge, edge);
         if (t > 0 && t < 1) {
             answer++;
