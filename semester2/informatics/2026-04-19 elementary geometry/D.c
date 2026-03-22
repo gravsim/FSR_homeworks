@@ -3,36 +3,11 @@
 #include <math.h>
 
 
-#define EPSILON 1e-20
+#define EPSILON 1e-10
 
 
 double double_equal(double a, double b) {
     return fabs(a - b) <= EPSILON;
-}
-
-
-double cross2(double* a, double* b) {
-    return a[0] * b[1] - a[1] * b[0];
-}
-
-
-int sign(double a) {
-    if (double_equal(a, 0.)) {
-        return 0;
-    }
-    if (a < EPSILON) {
-        return -1;
-    }
-    if (a > EPSILON) {
-        return 1;
-    }
-}
-
-
-int get_vec_sign(double* start, double* end, double* point) {
-    double vector1[2] = {end[0] - start[0], end[1] - start[1]};
-    double vector2[2] = {point[0] - start[0], point[1] - start[1]};
-    return sign(cross2(vector1, vector2));
 }
 
 
@@ -47,16 +22,6 @@ double distance(double vector1[2], double vector2[2]) {
 }
 
 
-int point_on_segment(double* A, double* B, double* point) {
-    return double_equal(distance(A, point) + distance(B, point), distance(A, B));
-}
-
-
-int on_same_side(double* A, double* B, double* point1, double* point2) {
-    return get_vec_sign(A, B, point1) == get_vec_sign(A, B, point2);
-}
-
-
 int main(void) {
     double* center = malloc(2 * sizeof(double));
     double radius;
@@ -67,6 +32,23 @@ int main(void) {
 
     scanf("%lf %lf %lf %lf %lf", center, center + 1, &radius, point, point + 1);
     double center2point = distance(center, point);
+    if (center2point < radius) {
+        printf("0\n");
+        free(center);
+        free(point);
+        free(contact1);
+        free(contact2);
+        return 0;
+    }
+    if (double_equal(center2point, radius)) {
+        printf("1\n");
+        printf("%lf %lf\n", point[0], point[1]);
+        free(center);
+        free(point);
+        free(contact1);
+        free(contact2);
+        return 0;
+    }
     double leg = sqrt(pow(center2point, 2) - pow(radius, 2));
     double k = pow(radius / center2point, 2);
     point[0] -= center[0];
