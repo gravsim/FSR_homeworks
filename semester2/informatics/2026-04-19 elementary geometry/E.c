@@ -17,21 +17,43 @@ double double_equal(double a, double b) {
 }
 
 
-double norm(double* vector) {
-    return sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
+double get_norm(vec2* vector) {
+    return sqrt(vector->x * vector->x + vector->y * vector->y);
 }
 
 
-double distance(double vector1[2], double vector2[2]) {
-    double difference[2] = {vector1[0] - vector2[0], vector1[1] - vector2[1]};
-    return norm(difference);
+vec2* normalize(vec2* vector) {
+    vec2* difference = malloc(sizeof(vec2));
+    difference->x = vector->x / get_norm(vector);
+    difference->y = vector->y / get_norm(vector);
+    return difference;
 }
 
 
-float cross2(vec2 a, vec2 b) {
-    return a.x * b.y - a.y * b.x;
+vec2* subtract(vec2* vector1, vec2* vector2) {
+    vec2* difference = malloc(sizeof(vec2));
+    difference->x = vector1->x - vector2->x;
+    difference->y = vector1->x - vector2->y;
+    return difference;
 }
 
+
+double distance(vec2* vector1, vec2* vector2) {
+    vec2* difference = subtract(vector2, vector1);
+    double norm = get_norm(difference);
+    free(difference);
+    return norm;
+}
+
+
+double cross2(vec2* a, vec2* b) {
+    return a->x * b->y - a->y * b->x;
+}
+
+
+double dot(vec2* a, vec2* b) {
+    return a->x * b->x + a->y * b->y;
+}
 
 
 int int_sign(float a) {
@@ -45,25 +67,36 @@ int int_sign(float a) {
 
 
 
-int vectors_sign(vec2 point, vec2 start, vec2 end) {
-    vec2 edge = end - start;
-    return int_sign(cross2(edge, point - start));
+int vectors_sign(vec2* point, vec2* start, vec2* end) {
+    vec2* edge = subtract(end, start);
+    vec2* diff = subtract(point, start);
+    int result = int_sign(cross2(edge, diff));
+    free(edge);
+    free(diff);
+    return result;
 }
 
 
-float get_cos(vec2 vector1, vec2 vector2) {
+double get_cos(vec2* vector1, vec2* vector2) {
     return dot(normalize(vector1), normalize(vector2));
 }
 
 
 
-int get_max_cos_index(vec2 point1, vec2 point2) {
+int vec2_equal(vec2* vector1, vec2* vector2) {
+    return double_equal(vector1->x, vector2->x) && double_equal(vector1->y, vector2->y);
+}
+
+
+int get_max_cos_index(vec2* vertices, int vert_amount, vec2* point1, vec2* point2) {
     int i;
-    float max_cos = -2.;
+    double max_cos = -2.;
     int max_index = -1;
     for (i = 0; i < vert_amount; i++) {
-        if (vertices[i] != point2) {
-            float new_cos = get_cos(point2 - point1, vertices[i] - point2);
+        if (vec2_equal(vertices + i, point2)) {
+            vec2* diff1 = subtract(point2, point1);
+            vec2* diff2 = subtract(vertices + i, point2);
+            double new_cos = get_cos(diff1, diff2);
             if (new_cos > max_cos) {
                 max_cos = new_cos;
                 max_index = i;
@@ -74,31 +107,34 @@ int get_max_cos_index(vec2 point1, vec2 point2) {
 }
 
 
-void Jarvis_algotythm() {
+void Jarvis_algotythm(int n, vec2* vertices, vec2* convex_vertices, int convex_size) {
     int i;
     int min_index = 0;
-    vec2 point1;
-    vec2 point2;
-    for (i = 0; i < vert_amount; i++) {
-        if (vertices[i].x < vertices[min_index].x || (vertices[i].x == vertices[min_index].x && vertices[i].y < vertices[min_index].y)){
+    vec2 *point1;
+    vec2 *point2;
+    for (i = 0; i < n; i++) {
+        if (vertices[i].x < vertices[min_index].x || (double_equal(vertices[i].x, vertices[min_index].x) && vertices[i].y < vertices[min_index].y)){
             min_index = i;
         }
     }
-    int current = min_index;
-    convex_set_size = 0;
-    convex_vertices[convex_set_size] = vertices[min_index];
-    convex_set_size++;
+    int current;
+    convex_size = 0;
+    convex_vertices[convex_size] = vertices[min_index];
+    convex_size++;
 
-    point1 = convex_vertices[0];
-    point2 = point1 + vec2(0., -0.1);
-    current = get_max_cos_index(point1, point2);
+    point1 = convex_vertices;
+    point2 = malloc(sizeof(vec2));
+    point2->x = point1->x;
+    point1->y = point1->y - 0.1;
+    current = get_max_cos_index(vertices, n, point1, point2);
     do {
-        convex_vertices[convex_set_size] = vertices[current];
-        convex_set_size++;
-        point1 = convex_vertices[convex_set_size-2];
-        point2 = convex_vertices[convex_set_size-1];
-        current = get_max_cos_index(point1, point2);
+        convex_vertices[convex_size] = vertices[current];
+        convex_size++;
+        point1 = convex_vertices + (convex_size-2);
+        point2 = convex_vertices + (convex_size-1);
+        current = get_max_cos_index(vertices, n, point1, point2);
     } while (current != -1 && current != min_index);
+    free(point2);
 }
 
 
@@ -106,49 +142,16 @@ int main(void) {
     int n;
     vec2* barycenter = malloc(sizeof(vec2));
     scanf("%d %lf %lf", &n, &barycenter->x, &barycenter->y);
-    vec2* points = calloc(n, sizeof(vec2));
-    double* center = malloc(2 * sizeof(double));
-    double radius;
-    double* point = malloc(2 * sizeof(double));
-
-    double* contact1 = malloc(2 * sizeof(double));
-    double* contact2 = malloc(2 * sizeof(double));
-
-    scanf("%lf %lf %lf %lf %lf", center, center + 1, &radius, point, point + 1);
-    double center2point = distance(center, point);
-    if (center2point < radius) {
-        printf("0\n");
-        free(center);
-        free(point);
-        free(contact1);
-        free(contact2);
-        return 0;
+    vec2* vertices = calloc(n, sizeof(vec2));
+    vec2* convex_vertices = calloc(n, sizeof(vec2));
+    int convex_size = 0;
+    int i;
+    for (i = 0; i < n; i++) {
+        scanf("%lf %lf", &vertices[i].x, &vertices[i].y);
     }
-    if (double_equal(center2point, radius)) {
-        printf("1\n");
-        printf("%lf %lf\n", point[0], point[1]);
-        free(center);
-        free(point);
-        free(contact1);
-        free(contact2);
-        return 0;
-    }
-    double leg = sqrt(pow(center2point, 2) - pow(radius, 2));
-    double k = pow(radius / center2point, 2);
-    point[0] -= center[0];
-    point[1] -= center[1];
-
-    contact1[0] = center[0] + k * point[0] - radius / pow(center2point, 2) * leg * point[1];
-    contact1[1] = center[1] + k * point[1] + radius / pow(center2point, 2) * leg * point[0];
-
-    contact2[0] = center[0] + k * point[0] + radius / pow(center2point, 2) * leg * point[1];
-    contact2[1] = center[1] + k * point[1] - radius / pow(center2point, 2) * leg * point[0];
-    printf("2\n");
-    printf("%lf %lf\n", contact1[0], contact1[1]);
-    printf("%lf %lf\n", contact2[0], contact2[1]);
-    free(center);
-    free(point);
-    free(contact1);
-    free(contact2);
+    Jarvis_algotythm(n ,vertices, convex_vertices, convex_size);
+    free(barycenter);
+    free(vertices);
+    free(convex_vertices);
     return 0;
 }
