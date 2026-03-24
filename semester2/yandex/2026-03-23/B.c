@@ -14,8 +14,13 @@ typedef struct Stack {
 
 
 int push(Stack* stack, int* value) {
-    Node* new_node = malloc(sizeof(struct Node));
-    if (!new_node) return -1;
+    if (!value || !stack) {
+        return -1;
+    }
+    Node* new_node = malloc(sizeof(Node));
+    if (!new_node) {
+        return -1;
+    }
     new_node->value = *value;
     if (!stack->beg) {
     	new_node->next = NULL;
@@ -29,6 +34,9 @@ int push(Stack* stack, int* value) {
 
 
 int pop(Stack* stack, int* value) {
+    if (!value || !stack) {
+        return -1;
+    }
     *value = stack->beg->value;
     Node* current = stack->beg;
     stack->beg = stack->beg->next;
@@ -38,14 +46,18 @@ int pop(Stack* stack, int* value) {
 
 
 int top(Stack* stack, int* value) {
+    if (!value || !stack) {
+        return -1;
+    }
     *value = stack->beg->value;
     return 0;
 }
 
 int top_next(Stack* stack, int* value) {
-    if (stack->beg->next) {
-        *value = stack->beg->next->value;
+    if (!value || !stack) {
+        return -1;
     }
+    *value = stack->beg->next->value;
     return 0;
 }
 
@@ -56,6 +68,9 @@ int is_empty(Stack* stack) {
 
 
 int clear(Stack* stack) {
+    if (!stack) {
+        return -1;
+    }
     Node* current = stack->beg;
     Node* next;
     while (current) {
@@ -70,9 +85,8 @@ int clear(Stack* stack) {
 
 int main(void) {
     int command;
-    int true_false;
     int value;
-    Stack* stack = malloc(sizeof(struct Stack));
+    Stack* stack = malloc(sizeof(Stack));
     stack->beg = NULL;
     do {
         scanf("%d", &command);
