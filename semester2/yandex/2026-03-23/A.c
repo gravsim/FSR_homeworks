@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-7
+#define EPSILON 1e-20
 
 
 typedef struct vec2 {
