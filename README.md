@@ -13,6 +13,8 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 
 ### Яндекс контесты
 ### 2 Cеместр
+
+[2026-03-26 6. Пересечение отрезков на плоскости](https://contest.yandex.ru/contest/92581/problems/)\
 [2026-03-23 5. Выпуклое множество и внезапно стек](https://contest.yandex.ru/contest/92444/problems/)\
 [2026-03-02 4. Форд-Фалкерсон](https://contest.yandex.ru/contest/91233/problems/)\
 [2026-02-25 3. Флойд-Уоршелл-Рой](https://contest.yandex.ru/contest/91072/enter)\
