@@ -21,32 +21,33 @@ int double_equal(double a, double b) {
 }
 
 
-BST_node* BST_new_node(int value) {
+BST_node* BST_new_node(int line_index, double y) {
     /*
         Создаем новый узел.
     */
     BST_node* new_node = malloc(sizeof(BST_node));
-    new_node->y = value;
+    new_node->line_index = line_index;
+    new_node->y = y;
     new_node->left = NULL;
     new_node->right = NULL;
     return new_node;
 }
 
 
-BST_node* BST_push(BST_node* root_p, int value) {
+BST_node* BST_push(BST_node* root_p, int line_index, double y) {
     /*
         Добавляем новый лист к дереву.
     */
     if (!root_p) {
-        return BST_new_node(value);
+        return BST_new_node(line_index, y);
     }
-    if (double_equal(value, root_p->y)) {
+    if (double_equal(y, root_p->y)) {
         return root_p;
     }
-    if (root_p->y < value) {
-        root_p->right = BST_push(root_p->right, value);
+    if (root_p->y < y) {
+        root_p->right = BST_push(root_p->right, line_index, y);
     } else {
-        root_p->left = BST_push(root_p->left, value);
+        root_p->left = BST_push(root_p->left, line_index, y);
     }
     return root_p;
 }
@@ -109,7 +110,7 @@ int get_lower_neighbour(BST_node* root_p, double value) {
 }
 
 
-int get_higher_neighbour(BST_node* root_p, int value) {
+int get_higher_neighbour(BST_node* root_p, double value) {
     double lowest = DBL_MAX;
     int lowest_line_index = -1;
     while (root_p) {
@@ -124,6 +125,67 @@ int get_higher_neighbour(BST_node* root_p, int value) {
         }
     }
     return lowest_line_index;
+}
+
+
+
+BST_node** find_right_min(BST_node** node) {
+    /*
+        Ищем узел с минимальным значением в дереве с корнем node.
+    */
+    if (!*node) {
+        return NULL;
+    }
+    while ((*node)->right) {
+        node = &(*node)->right;
+    }
+    return node;
+}
+
+
+BST_node** search_node(BST_node** current, double value) {
+    /*
+        Ищем узел со значением value в дереве current.
+    */
+    while (*current && double_equal((*current)->y, value)) {
+        if ((*current)->y > value) {
+            current = &(*current)->right;
+        } else {
+            current = &(*current)->left;
+        }
+    }
+    return current;
+}
+
+
+int delete_node(BST_node** node_pp) {
+    if (!node_pp || !*node_pp) {
+        return 0;
+    }
+    BST_node* tmp = *node_pp;
+    if (!(*node_pp)->right && !(*node_pp)->left) {
+        // Нет детей
+        free(tmp);
+        *node_pp = NULL;
+        return 1;
+    }
+    if (!(*node_pp)->right) {
+        // Нет только правого ребенка
+        *node_pp = (*node_pp)->left;
+        free(tmp);
+        return 1;
+    }
+    if (!(*node_pp)->left) {
+        // Нет только левого ребенка
+        *node_pp = (*node_pp)->right;
+        free(tmp);
+        return 1;
+    }
+    // Есть оба ребенка
+    BST_node** descendant = find_right_min(&(*node_pp)->left);
+    (*node_pp)->line_index = (*descendant)->line_index;
+    (*node_pp)->y = (*descendant)->y;
+    return delete_node(descendant);
 }
 
 
@@ -201,6 +263,7 @@ typedef struct Heap_node {
     */
     vec2 coords;
     int line_index;
+    int cross_line;
     int type;
 } Heap_node;
 
@@ -261,23 +324,23 @@ int Heap_sift_down(Heap* heap, int index) {
 }
 
 
-int Heap_push(Heap* heap, double x, double y, int line_index) {
+int Heap_push(Heap* heap, double x, double y, int line_index, int cross_line, int type) {
     if (Heap_is_full(heap)) {
         Heap_expand(heap);
     }
     heap->values[heap->size].coords.x = x;
     heap->values[heap->size].coords.y = y;
-    heap->values[heap->size].type = 0;
+    heap->values[heap->size].type = type;
     heap->values[heap->size].line_index = line_index;
+    heap->values[heap->size].cross_line = cross_line;
     Heap_sift_up(heap, heap->size);
     heap->size++;
     return 0;
 }
 
 
-int Heap_pop_minimum(Heap* heap, int* index, Heap_node* value) {
+int Heap_pop_minimum(Heap* heap, Heap_node* value) {
     *value = heap->values[0];
-    *index = heap->values[0].line_index;
     heap->values[0] = heap->values[--heap->size];
     return Heap_sift_down(heap, 0) + 1;
 }
@@ -292,7 +355,7 @@ int Heap_init(Heap** heap) {
 }
 
 
-int is_intersection(Heap_node** segments, int i, int j) {
+int intersects(Heap_node** segments, int i, int j) {
     if (vectors_sign(segments[j][0].coords, segments[i][1].coords, segments[i][0].coords) !=
         vectors_sign(segments[j][1].coords, segments[i][1].coords, segments[i][0].coords)
         &&
@@ -323,29 +386,38 @@ vec2 get_intersection(Heap_node** segments, int i, int j) {
 
 
 
-int get_neighbours(BST_node* root_p, double y, int* i, int* j) {
-    *i = get_higher_neighbour(root_p, y);
-    *j = get_lower_neighbour(root_p, y);
+int get_neighbours(Heap_node** segments, Heap* heap, BST_node* root_p, double y, Heap_node point) {
+    int low_neighbour = get_lower_neighbour(root_p, y);
+    int high_neighbour = get_higher_neighbour(root_p, y);
+    if (low_neighbour != -1 && intersects(segments, point.line_index, low_neighbour)) {
+        vec2 intersection_point = get_intersection(segments, point.line_index, low_neighbour);
+        Heap_push(heap, intersection_point.x, intersection_point.y, point.line_index, low_neighbour, 3);
+    }
+    if (high_neighbour != -1 && intersects(segments, point.line_index, high_neighbour)) {
+        vec2 intersection_point = get_intersection(segments, point.line_index, high_neighbour);
+        Heap_push(heap, intersection_point.x, intersection_point.y, point.line_index, high_neighbour, 3);
+    }
     return 0;
 }
 
 
 void Bentley_Ottmann_algorithm(int n, Heap_node** segments, Heap* heap, BST_node* root_p) {
-    int line_index;
     Heap_node point;
-    int i;
-    int j;
     while (!Heap_is_empty(heap)) {
-        Heap_pop_minimum(heap, &line_index, &point);
+        Heap_pop_minimum(heap, &point);
         if (point.type == 0) {
             // Beginning
-            get_neighbours(root_p, point.coords.y, &i, &j);
-            BST_push(root_p, point.line_index);
+            BST_push(root_p, point.line_index, point.coords.y);
+            get_neighbours(segments, heap, root_p, point.coords.y, point);
+
         } else if (point.type == 1) {
             // End
-            BST_push(root_p, point.line_index);
+            BST_node** found = search_node(&root_p, point.coords.y);
+            delete_node(found);
+            get_neighbours(segments, heap, root_p, point.coords.y, point);
         } else {
             // Intersection
+            get_neighbours(segments, heap, root_p, point.coords.y, point);
         }
     }
 }
@@ -381,8 +453,8 @@ int main(void) {
         segments[i][1].coords.y = By;
         segments[i][1].type = 1;
 
-        Heap_push(heap, Ax, Ay, line_index);
-        Heap_push(heap, Bx, By, line_index);
+        Heap_push(heap, Ax, Ay, line_index, -1, 0);
+        Heap_push(heap, Bx, By, line_index, -1, 0);
     }
     Bentley_Ottmann_algorithm(n, segments, heap, root);
 
