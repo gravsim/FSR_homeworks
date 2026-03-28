@@ -6,8 +6,8 @@
 
 #define EPSILON 1e-10
 #define BEGINNING 0
-#define END 1
-#define CROSS 2
+#define CROSS 1
+#define END 2
 
 
 typedef struct BST_node {
@@ -245,7 +245,13 @@ int BST_delete_node(Heap_node** segments, double sweeping_line_x, BST_node** nod
 
 
 
-int BST_swap_nodes(Heap_node** segments, double sweeping_line_x, BST_node** root_p, int index1, int index2) {
+int BST_swap_nodes(
+    Heap_node** segments
+    , double sweeping_line_x
+    , BST_node** root_p
+    , int index1
+    , int index2
+    ) {
     BST_node** node1 = BST_search_node(segments, sweeping_line_x, root_p, index1);
     BST_node** node2 = BST_search_node(segments, sweeping_line_x, root_p, index2);
     swap_int(&(*node1)->line_index, &(*node2)->line_index);
@@ -341,27 +347,61 @@ void Heap_expand(Heap* heap) {
 
 
 int Heap_sift_up(Heap* heap, int index) {
-    while (index > 0 && heap->values[index].coords.x < heap->values[(index - 1) / 2].coords.x) {
-        Heap_swap_nodes(heap->values + index, heap->values + (index - 1) / 2);
-        index = (index - 1) / 2;
+    int parent = (index - 1) / 2;
+    vec2 index_coords = heap->values[index].coords;
+    vec2 parent_coords = heap->values[parent].coords;
+    while (index > 0
+        &&
+        (index_coords.x < parent_coords.x - EPSILON
+            ||
+            (double_equal(index_coords.x, parent_coords.x)
+            &&
+            heap->values[index].type >= heap->values[parent].type)
+            )
+        ) {
+        Heap_swap_nodes(heap->values + index, heap->values + parent);
+        index = parent;
+        parent = (index - 1) / 2;
+        index_coords = heap->values[index].coords;
+        parent_coords = heap->values[parent].coords;
     }
     return 0;
 }
 
 
 int Heap_sift_down(Heap* heap, int index) {
-    int max_index = index;
-    if (2 * index + 2 < heap->size && heap->values[2 * index + 2].coords.x < heap->values[max_index].coords.x) {
-        max_index = 2 * index + 2;
+    int next = index;
+    Heap_node next_node = heap->values[next];
+    Heap_node candidate = heap->values[2 * index + 2];
+    if (2 * index + 2 < heap->size
+        &&
+        (candidate.coords.x < next_node.coords.x - EPSILON
+            ||
+            (double_equal(candidate.coords.x, next_node.coords.x)
+                &&
+                candidate.type >= next_node.type)
+        )
+        ) {
+        next = 2 * index + 2;
     }
-    if (2 * index + 1 < heap->size && heap->values[2 * index + 1].coords.x < heap->values[max_index].coords.x) {
-        max_index = 2 * index + 1;
+    next_node = heap->values[next];
+    candidate = heap->values[2 * index + 1];
+    if (2 * index + 1 < heap->size
+        &&
+        (candidate.coords.x < next_node.coords.x - EPSILON
+            ||
+            (double_equal(candidate.coords.x, next_node.coords.x)
+                &&
+                candidate.type >= next_node.type)
+        )
+        ) {
+        next = 2 * index + 1;
     }
-    if (max_index != index) {
-        Heap_swap_nodes(&heap->values[index], &heap->values[max_index]);
-        return Heap_sift_down(heap, max_index);
+    if (next != index) {
+        Heap_swap_nodes(&heap->values[index], &next_node);
+        return Heap_sift_down(heap, next);
     }
-    return max_index;
+    return next;
 }
 
 
@@ -397,10 +437,12 @@ int Heap_init(Heap** heap) {
 
 
 int intersects(Heap_node** segments, int i, int j) {
-    if (vectors_sign(segments[j][0].coords, segments[i][1].coords, segments[i][0].coords) !=
+    if (vectors_sign(segments[j][0].coords, segments[i][1].coords, segments[i][0].coords)
+        !=
         vectors_sign(segments[j][1].coords, segments[i][1].coords, segments[i][0].coords)
         &&
-        vectors_sign(segments[i][0].coords, segments[j][1].coords, segments[j][0].coords) !=
+        vectors_sign(segments[i][0].coords, segments[j][1].coords, segments[j][0].coords)
+        !=
         vectors_sign(segments[i][1].coords, segments[j][1].coords, segments[j][0].coords)
         ) {
         return 1;
@@ -427,7 +469,15 @@ vec2 get_intersection(Heap_node** segments, int i, int j) {
 
 
 
-int check_intersection(int* intersections_amount, int** intersections, Heap_node** segments, Heap* heap, double sweeping_line_x, int line1, int line2) {
+int check_intersection(
+    int* intersections_amount
+    , int** intersections
+    , Heap_node** segments
+    , Heap* heap
+    , double sweeping_line_x
+    , int line1
+    , int line2
+    ) {
     vec2 intersection_point;
     if (line1 != -1 && line2 != -1 && intersects(segments, line1, line2))  {
         intersection_point = get_intersection(segments, line1, line2);
@@ -478,7 +528,13 @@ void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
 }
 
 
-int Bentley_Ottmann_algorithm(int* intersections_amount, int** intersections, Heap_node** segments, Heap** heap, BST_node** root_p) {
+int Bentley_Ottmann_algorithm(
+    int* intersections_amount
+    , int** intersections
+    , Heap_node** segments
+    , Heap** heap
+    , BST_node** root_p
+    ) {
     Heap_node point;
     double sweeping_line_x;
     int low_neighbour;
@@ -494,35 +550,90 @@ int Bentley_Ottmann_algorithm(int* intersections_amount, int** intersections, He
         sweeping_line_x = point.coords.x;
         if (point.type == BEGINNING) {
 
-            //printf("%d\n", point.line_index);
+            printf("%d\n", point.line_index);
             *root_p = BST_push(segments, sweeping_line_x, *root_p, point.line_index);
             low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
 
-            check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, point.line_index, low_neighbour);
-            check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, point.line_index, high_neighbour);
+            check_intersection(
+                intersections_amount
+                , intersections
+                , segments
+                , *heap
+                , sweeping_line_x
+                , point.line_index
+                , low_neighbour
+                );
+            check_intersection(
+                intersections_amount
+                , intersections
+                , segments
+                , *heap
+                , sweeping_line_x
+                , point.line_index
+                , high_neighbour);
         } else if (point.type == END) {
 
-            //printf("%d\n", point.line_index);
+            printf("%d\n", point.line_index);
             low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             BST_node** found = BST_search_node(segments, sweeping_line_x, root_p, point.line_index);
             BST_delete_node(segments, sweeping_line_x, found);
-            check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, low_neighbour, high_neighbour);
+            check_intersection(
+                intersections_amount
+                , intersections
+                , segments
+                , *heap
+                , sweeping_line_x
+                , low_neighbour
+                , high_neighbour
+                );
         } else if (point.type == CROSS) {
 
-            //printf("%d %d\n", point.line_index, point.cross_line);
+            printf("%d %d\n", point.line_index, point.cross_line);
             a_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             a_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
 
             b_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.cross_line);
             b_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.cross_line);
             BST_swap_nodes(segments, sweeping_line_x, root_p, point.line_index, point.cross_line);
-            check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, point.line_index, b_neighbour_low);
-            check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, point.line_index, b_neighbour_high);
+            check_intersection(
+                intersections_amount
+                , intersections
+                , segments
+                , *heap
+                , sweeping_line_x
+                , point.line_index
+                , b_neighbour_low
+                );
+            check_intersection(
+                intersections_amount
+                , intersections
+                , segments
+                , *heap
+                , sweeping_line_x
+                , point.line_index
+                , b_neighbour_high
+                );
 
-            check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, point.cross_line, a_neighbour_low);
-            check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, point.cross_line, a_neighbour_high);
+            check_intersection(
+                intersections_amount
+                , intersections
+                , segments
+                , *heap
+                , sweeping_line_x
+                , point.cross_line
+                , a_neighbour_low
+                );
+            check_intersection(
+                intersections_amount
+                , intersections
+                , segments
+                , *heap
+                , sweeping_line_x
+                , point.cross_line
+                , a_neighbour_high
+                );
         }
     }
     return 1;
@@ -531,7 +642,6 @@ int Bentley_Ottmann_algorithm(int* intersections_amount, int** intersections, He
 
 int main(void) {
     int n;
-
     scanf("%d", &n);
     int line_index;
     double Ax;
@@ -568,7 +678,7 @@ int main(void) {
         Heap_push(heap, Bx, By, line_index, -1, END);
     }
     Bentley_Ottmann_algorithm(&intersections_amount, intersections, segments, &heap, &root);
-    //printf("\nend\n");
+    printf("\nend\n");
     for (i = 0; i < intersections_amount; i++) {
         if (intersections[i][0] > intersections[i][1]) {
             swap_int(intersections[i], intersections[i] + 1);
