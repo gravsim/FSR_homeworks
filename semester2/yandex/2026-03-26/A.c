@@ -346,24 +346,26 @@ void Heap_expand(Heap* heap) {
 }
 
 
+int is_smaller(Heap_node a, Heap_node b) {
+    if (a.coords.x < b.coords.x - EPSILON) {
+        return 1;
+    }
+    if (a.coords.x > b.coords.x + EPSILON) {
+        return 0;
+    }
+    return a.type < b.type;
+}
+
+
 int Heap_sift_up(Heap* heap, int index) {
     int parent = (index - 1) / 2;
-    vec2 index_coords = heap->values[index].coords;
-    vec2 parent_coords = heap->values[parent].coords;
     while (index > 0
         &&
-        (index_coords.x < parent_coords.x - EPSILON
-            ||
-            (double_equal(index_coords.x, parent_coords.x)
-            &&
-            heap->values[index].type >= heap->values[parent].type)
-            )
+        is_smaller(heap->values[index], heap->values[parent])
         ) {
         Heap_swap_nodes(heap->values + index, heap->values + parent);
         index = parent;
         parent = (index - 1) / 2;
-        index_coords = heap->values[index].coords;
-        parent_coords = heap->values[parent].coords;
     }
     return 0;
 }
@@ -371,34 +373,20 @@ int Heap_sift_up(Heap* heap, int index) {
 
 int Heap_sift_down(Heap* heap, int index) {
     int next = index;
-    Heap_node next_node = heap->values[next];
-    Heap_node candidate = heap->values[2 * index + 2];
-    if (2 * index + 2 < heap->size
-        &&
-        (candidate.coords.x < next_node.coords.x - EPSILON
-            ||
-            (double_equal(candidate.coords.x, next_node.coords.x)
-                &&
-                candidate.type >= next_node.type)
-        )
-        ) {
-        next = 2 * index + 2;
-    }
-    next_node = heap->values[next];
-    candidate = heap->values[2 * index + 1];
     if (2 * index + 1 < heap->size
         &&
-        (candidate.coords.x < next_node.coords.x - EPSILON
-            ||
-            (double_equal(candidate.coords.x, next_node.coords.x)
-                &&
-                candidate.type >= next_node.type)
-        )
+        is_smaller(heap->values[2 * index + 1], heap->values[next])
         ) {
         next = 2 * index + 1;
     }
+    if (2 * index + 2 < heap->size
+        &&
+        is_smaller(heap->values[2 * index + 2], heap->values[next])
+        ) {
+        next = 2 * index + 2;
+    }
     if (next != index) {
-        Heap_swap_nodes(&heap->values[index], &next_node);
+        Heap_swap_nodes(&heap->values[index], &heap->values[next]);
         return Heap_sift_down(heap, next);
     }
     return next;
@@ -683,7 +671,6 @@ int main(void) {
         if (intersections[i][0] > intersections[i][1]) {
             swap_int(intersections[i], intersections[i] + 1);
         }
-
     }
     quick_sort(intersections, 0, intersections_amount, 0, intersections_amount - 1);
     for (i = 0; i < intersections_amount; i++) {
