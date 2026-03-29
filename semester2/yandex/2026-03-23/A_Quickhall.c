@@ -17,43 +17,13 @@ double double_equal(double a, double b) {
 }
 
 
-double get_norm(vec2 vector) {
-    return sqrt(vector.x * vector.x + vector.y * vector.y);
-}
-
-
-vec2 normalize(vec2 vector) {
-    double norm = get_norm(vector);
-    if (double_equal(norm, 0.)) {
-        return vector;
-    }
-    return (vec2){vector.x / norm, vector.y / norm};
-}
-
-
 vec2 subtract(vec2 vector1, vec2 vector2) {
     return (vec2){vector1.x - vector2.x, vector1.y - vector2.y};
 }
 
 
-double distance(vec2 vector1, vec2 vector2) {
-    return get_norm(subtract(vector2, vector1));
-}
-
-
 double cross2(vec2 a, vec2 b) {
     return a.x * b.y - a.y * b.x;
-}
-
-
-double dot(vec2 a, vec2 b) {
-    return a.x * b.x + a.y * b.y;
-}
-
-
-
-double get_cos(vec2 vector1, vec2 vector2) {
-    return dot(normalize(vector1), normalize(vector2));
 }
 
 
@@ -70,21 +40,12 @@ int vectors_sign(vec2 point, vec2 start, vec2 end) {
 }
 
 
-int vec2_equal(vec2 vector1, vec2 vector2) {
-    return double_equal(vector1.x, vector2.x)
-           &&
-           double_equal(vector1.y, vector2.y);
-}
-
-
-
 double line_distance(vec2 start, vec2 end, vec2 point) {
     double A = start.y - end.y;
     double B = end.x - start.x;
     double C = A * start.x + B * start.y;
     return fabs(A * point.x + B * point.y + C) / sqrt(A * A + B * B);
 }
-
 
 
 int get_right_down(vec2* hull, int hull_size) {
@@ -103,7 +64,15 @@ int get_right_down(vec2* hull, int hull_size) {
 }
 
 
-void QuickHall_algorithm(int n, vec2* vertices, vec2* hull, int* hull_size, vec2 vert1, vec2 vert2, int side) {
+void QuickHall_algorithm(
+    int n
+    , vec2* vertices
+    , vec2* hull
+    , int* hull_size
+    , vec2 vert1
+    , vec2 vert2
+    , int side
+    ) {
     int index = -1;
     double max_distance = 0;
     int i;
@@ -139,7 +108,6 @@ void QuickHall_algorithm(int n, vec2* vertices, vec2* hull, int* hull_size, vec2
         , vert2
         , -vectors_sign(vertices[index], vert2, vert1)
         );
-
 }
 
 
@@ -200,6 +168,7 @@ void quick_sort(vec2* main_array, int size, int down, int up, vec2 base) {
     quick_sort(main_array, size, left, up, base);
 }
 
+
 int main(void) {
     int n;
     scanf("%d", &n);
@@ -239,8 +208,26 @@ int main(void) {
             right = i;
              }
     }
-    QuickHall_algorithm(n, vertices, hull, &hull_size, vertices[left], vertices[right], 1);
-    QuickHall_algorithm(n, vertices, hull, &hull_size, vertices[left], vertices[right], -1);
+    hull[hull_size++] = vertices[right];
+    hull[hull_size++] = vertices[left];
+    QuickHall_algorithm(
+        n
+        , vertices
+        , hull
+        , &hull_size
+        , vertices[left]
+        , vertices[right]
+        , 1
+        );
+    QuickHall_algorithm(
+        n
+        , vertices
+        , hull
+        , &hull_size
+        , vertices[left]
+        , vertices[right]
+        , -1
+        );
     int right_down = get_right_down(hull, hull_size);
     swap_vec2(&hull[0], &hull[right_down]);
     quick_sort(hull + 1, hull_size - 1, 0, hull_size - 2, hull[0]);
