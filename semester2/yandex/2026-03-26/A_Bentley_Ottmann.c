@@ -48,7 +48,6 @@ int swap_int(int* a, int* b) {
 }
 
 
-
 double get_y(Heap_node** segments, double sweeping_line_x, int line_index) {
     vec2 start = segments[line_index][0].coords;
     vec2 end = segments[line_index][1].coords;
@@ -66,17 +65,6 @@ BST_node* BST_new_node(int line_index) {
     new_node->right = NULL;
     return new_node;
 }
-
-
-int print_tree(BST_node* root_p) {
-    if (root_p) {
-        print_tree(root_p->right);
-        printf("%i ", root_p->line_index);
-        print_tree(root_p->left);
-    }
-    return 1;
-}
-
 
 
 int less_y(Heap_node** segments, double sweeping_line_x, int line1, int line2) {
