@@ -187,7 +187,12 @@ int main(void) {
             swap_int(intersections[i], intersections[i] + 1);
         }
     }
-    quick_sort(intersections, intersections_amount, 0, intersections_amount - 1);
+    quick_sort(
+        intersections
+        , intersections_amount
+        , 0
+        , intersections_amount - 1
+        );
     int final = 0;
     int current = 0;
     for (current = 0; current < intersections_amount; current++) {

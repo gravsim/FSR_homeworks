@@ -91,7 +91,12 @@ int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2)
 }
 
 
-void Jarvis_algorithm(int n, vec2* vertices, vec2* convex_vertices, int* convex_size) {
+void Jarvis_algorithm(
+    int n
+    , vec2* vertices
+    , vec2* convex_vertices
+    , int* convex_size
+    ) {
     int i;
     int min_index = 0;
     for (i = 0; i < n; i++) {
