@@ -122,8 +122,19 @@ int swap_double(double* a, double* b) {
 }
 
 
-int quick_sort(double* main_array, vec2** side_array, int size, int down, int up) {
-    if (main_array == NULL || side_array == NULL) {
+int swap_long(long* a, long* b) {
+    if (a == NULL || b == NULL) {
+        return -1;
+    }
+    long tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 1;
+}
+
+
+int quick_sort(double* main_array, vec2** side_array, long* fences_lengths, int size, int down, int up) {
+    if (main_array == NULL || side_array == NULL || fences_lengths == NULL) {
         return -1;
     }
     if (down >= up) {
@@ -132,7 +143,6 @@ int quick_sort(double* main_array, vec2** side_array, int size, int down, int up
     double pivot = main_array[(up + down) / 2];
     int left = down;
     int right = up;
-    int i;
     while (left <= right) {
         while (main_array[left] < pivot) {
             left++;
@@ -142,15 +152,14 @@ int quick_sort(double* main_array, vec2** side_array, int size, int down, int up
         }
         if (left <= right) {
             swap_double(main_array + left, main_array + right);
-            for (i = 0; i < size; i++) {
-                swap_vec2_pointers(side_array + left, side_array + right);
-            }
+            swap_long(fences_lengths + left, fences_lengths + right);
+            swap_vec2_pointers(side_array + left, side_array + right);
             left++;
             right--;
         }
     }
-    quick_sort(main_array, side_array, size, down, right);
-    quick_sort(main_array, side_array, size, left, up);
+    quick_sort(main_array, side_array, fences_lengths, size, down, right);
+    quick_sort(main_array, side_array, fences_lengths, size, left, up);
     return 1;
 }
 
@@ -158,7 +167,7 @@ int quick_sort(double* main_array, vec2** side_array, int size, int down, int up
 int in_polygon(long vertices_amount, vec2* vertices, vec2 point) {
     int i = 0;
     int end = 1;
-    vec2 ray_end = (vec2){10000, point.y + 10};
+    vec2 ray_end = (vec2){10000000, point.y + 10};
     int intersections_amount = 0;
     while (i < vertices_amount && !point_on_segment(vertices[i], vertices[end], point)) {
         end = (i + 1) % vertices_amount;
@@ -183,12 +192,11 @@ int main(void) {
     long M;
     long i;
     long j;
-    long k;
     scanf("%ld", &N);
     vec2** fences = calloc(N, sizeof(vec2*));
     long* fences_lengths = calloc(N, sizeof(long));
     double* areas = calloc(N, sizeof(double));
-    double* max_x = calloc(N, sizeof(double));
+    int* invaded_zones = calloc(N, sizeof(int));
     for (i = 0; i < N; i++) {
         scanf("%ld", fences_lengths + i);
         fences[i] = calloc(fences_lengths[i], sizeof(vec2));
@@ -197,43 +205,39 @@ int main(void) {
         }
         get_polygon_area(fences_lengths[i], fences[i], areas + i);
     }
-    for (i = 0; i < N; i++) {
-        max_x[i] = DBL_MIN;
-        for (j = 0; j < fences_lengths[i]; j++) {
-            if (fences[i][j].x > max_x[i]) {
-                max_x[i] = fences[i][j].x;
-            }
-        }
-    }
-    quick_sort(max_x, fences, N, 0, N - 1);
+    quick_sort(areas, fences, fences_lengths, N, 0, N - 1);
     scanf("%ld", &M);
     vec2* invaders = calloc(M, sizeof(vec2));
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < M; i++) {
         scanf("%lf %lf", &invaders[i].x, &invaders[i].y);
     }
-    int invaded;
-    int l;
     double invaded_area = 0;
-    for (k = 0; k < M; k++) {
-        l = 0;
-        invaded = 1;
-        while (l < N && invaded) {
-            if (in_polygon(fences_lengths[l], fences[l], invaders[k])) {
-                invaded = 0;
-                invaded_area += areas[l];
-                if (l > 0) {
-                    invaded_area -= areas[l - 1];
-                }
+    int zone_found;
+    for (i = 0; i < M; i++) {
+        j = 0;
+        zone_found = 0;
+        while (j < N && !zone_found) {
+            if (in_polygon(fences_lengths[j], fences[j], invaders[i])) {
+                zone_found = 1;
+                invaded_zones[j] = 1;
             }
-            l++;
+            j++;
         }
     }
-    printf("%lf", invaded_area);
+    for (i = 0; i < N; i++) {
+        if (invaded_zones[i]) {
+            invaded_area += areas[i];
+            if (i > 0) {
+                invaded_area -= areas[i - 1];
+            }
+        }
+    }
+    printf("%.6lf", invaded_area);
     for (i = 0; i < N; i++) {
         free(fences[i]);
     }
     free(fences_lengths);
     free(areas);
-    free(max_x);
+    free(invaded_zones);
     return 0;
 }
