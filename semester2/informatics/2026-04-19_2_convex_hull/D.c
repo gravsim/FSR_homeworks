@@ -13,55 +13,15 @@ typedef struct vec2 {
 } vec2;
 
 
-int double_equal(double a, double b) {
-    return fabs(a - b) <= EPSILON;
-}
-
-
-double get_norm(vec2 vector) {
-    return sqrt(vector.x * vector.x + vector.y * vector.y);
-}
-
-
 vec2 subtract(vec2 vector1, vec2 vector2) {
     return (vec2){vector1.x - vector2.x, vector1.y - vector2.y};
-}
-
-
-double distance(vec2 vector1, vec2 vector2) {
-    return get_norm(subtract(vector2, vector1));
-}
-
-
-vec2 normalize(vec2 vector) {
-    double norm = get_norm(vector);
-    if (double_equal(norm, 0.)) {
-        return vector;
-    }
-    return (vec2){vector.x / norm, vector.y / norm};
-}
-
-
-double dot(vec2 a, vec2 b) {
-    return a.x * b.x + a.y * b.y;
-}
-
-
-double get_cos(vec2 vector1, vec2 vector2) {
-    return dot(normalize(vector1), normalize(vector2));
-}
-
-
-int vec2_equal(vec2 vector1, vec2 vector2) {
-    return double_equal(vector1.x, vector2.x)
-           &&
-           double_equal(vector1.y, vector2.y);
 }
 
 
 double cross2(vec2 a, vec2 b) {
     return a.x * b.y - a.y * b.x;
 }
+
 
 int double_sign(double a) {
     return (a > EPSILON) - (a < -EPSILON);
@@ -72,12 +32,6 @@ int vectors_sign(vec2 point, vec2 start, vec2 end) {
     vec2 edge = subtract(end, start);
     vec2 diff = subtract(point, start);
     return double_sign(cross2(edge, diff));
-}
-
-
-
-int point_on_segment(vec2 A, vec2 B, vec2 point) {
-    return double_equal(distance(A, point) + distance(B, point), distance(A, B));
 }
 
 
@@ -93,7 +47,6 @@ int get_polygon_area(long fence_length, vec2* fence, double* area) {
         *area += fence[i].x * fence[next].y
                 -
                 fence[i].y * fence[next].x;
-
     }
     *area = fabs(*area) / 2;
     return 1;
@@ -133,7 +86,14 @@ int swap_long(long* a, long* b) {
 }
 
 
-int quick_sort(double* main_array, vec2** side_array, long* fences_lengths, int size, int down, int up) {
+int quick_sort(
+    double* main_array,
+    vec2** side_array,
+    long* fences_lengths,
+    int size,
+    int down,
+    int up
+    ) {
     if (main_array == NULL || side_array == NULL || fences_lengths == NULL) {
         return -1;
     }
@@ -164,18 +124,101 @@ int quick_sort(double* main_array, vec2** side_array, long* fences_lengths, int 
 }
 
 
-int in_polygon(long vertices_amount, vec2* vertices, vec2 point) {
-    int i = 0;
-    int first_sign = vectors_sign(point, vertices[vertices_amount - 1], vertices[0]);
-    int sign = first_sign;
-    int next;
-    while (i < vertices_amount && sign == first_sign) {
-        next = (i + 1) % vertices_amount;
-        sign = vectors_sign(point, vertices[i], vertices[next]);
-        i++;
-    }
-    if (i < vertices_amount) {
+int in_triangle(vec2 v1, vec2 v2, vec2 v3, vec2 point) {
+    int sign1 = vectors_sign(point, v1, v2);
+    int sign2 = vectors_sign(point, v2, v3);
+    int sign3 = vectors_sign(point, v3, v1);
+    return (sign1 >= 0 && sign2 >= 0 && sign3 >= 0)
+            ||
+            (sign1 <= 0 && sign2 <= 0 && sign3 <= 0);
+}
+
+
+int in_polygon(long polygon_size, vec2* polygon, vec2 point) {
+    if (vectors_sign(point, polygon[0], polygon[1]) < 0) {
         return 0;
+    }
+    if (vectors_sign(point, polygon[0], polygon[polygon_size - 1]) > 0) {
+        return 0;
+    }
+    int left = 1;
+    int right = polygon_size - 1;
+    int middle;
+    while (right - left > 1) {
+        middle = (right + left) / 2;
+        if (vectors_sign(point, polygon[0], polygon[middle]) >= 0) {
+            left = middle;
+        } else {
+            right = middle;
+        }
+    }
+    return in_triangle(polygon[0], polygon[left], polygon[right], point);
+}
+
+
+int set_invaded_zones(
+    long invaders_amount,
+    long fences_amount,
+    long* fences_lengths,
+    vec2** fences,
+    vec2* invaders,
+    int* invaded_zones
+    ) {
+    if (fences_lengths == NULL
+        ||
+        fences == NULL
+        ||
+        invaders == NULL
+        ||
+        invaded_zones == NULL) {
+        return -1;
+    }
+    int i;
+    long left;
+    long right;
+    long middle;
+    long invaded;
+    for (i = 0; i < invaders_amount; i++) {
+        left = 0;
+        right = fences_amount - 1;
+        invaded = -1;
+        if (in_polygon(fences_lengths[fences_amount - 1],
+        fences[fences_amount - 1],
+        invaders[i])
+        ) {
+            while (left <= right) {
+                middle = (left + right) / 2;
+                if (in_polygon(fences_lengths[middle],
+                fences[middle],
+                invaders[i])
+                ) {
+                    invaded = middle;
+                    right = middle - 1;
+                } else {
+                    left = middle + 1;
+                }
+            }
+            if (invaded != -1) {
+                invaded_zones[invaded] = 1;
+            }
+        }
+    }
+    return 1;
+}
+
+
+int calculate_invaded_area(long fences_amount, int* invaded_zones, double* areas, double* invaded_area) {
+    if (invaded_zones == NULL || areas == NULL || invaded_area == NULL) {
+        return -1;
+    }
+    int i;
+    for (i = 0; i < fences_amount; i++) {
+        if (invaded_zones[i]) {
+            *invaded_area += areas[i];
+            if (i > 0) {
+                *invaded_area -= areas[i - 1];
+            }
+        }
     }
     return 1;
 }
@@ -206,37 +249,13 @@ int main(void) {
     for (i = 0; i < invaders_amount; i++) {
         scanf("%lf %lf", &invaders[i].x, &invaders[i].y);
     }
-    long left;
-    long right;
-    long middle;
-    long invaded;
-    for (i = 0; i < invaders_amount; i++) {
-        left = 0;
-        right = fences_amount - 1;
-        invaded = -1;
-        if (in_polygon(fences_lengths[fences_amount - 1], fences[fences_amount - 1], invaders[i])) {
-            while (left <= right) {
-                middle = (left + right) / 2;
-                if (in_polygon(fences_lengths[middle], fences[middle], invaders[i])) {
-                    invaded = middle;
-                    right = middle - 1;
-                } else {
-                    left = middle + 1;
-                }
-            }
-            if (invaded != -1) {
-                invaded_zones[invaded] = 1;
-            }
-        }
-    }
-    for (i = 0; i < fences_amount; i++) {
-        if (invaded_zones[i]) {
-            invaded_area += areas[i];
-            if (i > 0) {
-                invaded_area -= areas[i - 1];
-            }
-        }
-    }
+    set_invaded_zones(invaders_amount,
+        fences_amount,
+        fences_lengths,
+        fences,
+        invaders,
+        invaded_zones);
+    calculate_invaded_area(fences_amount, invaded_zones, areas, &invaded_area);
     printf("%.6lf", invaded_area);
     for (i = 0; i < fences_amount; i++) {
         free(fences[i]);
