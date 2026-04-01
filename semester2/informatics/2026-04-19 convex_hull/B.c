@@ -41,28 +41,6 @@ vec2 normalize(vec2 vector) {
 }
 
 
-double cross2(vec2 a, vec2 b) {
-    return a.x * b.y - a.y * b.x;
-}
-
-
-int double_sign(double a) {
-    return (a > EPSILON) - (a < -EPSILON);
-}
-
-
-int vectors_sign(vec2 point, vec2 start, vec2 end) {
-    vec2 edge = subtract(end, start);
-    vec2 diff = subtract(point, start);
-    return double_sign(cross2(edge, diff));
-}
-
-
-int point_on_segment(vec2 A, vec2 B, vec2 point) {
-    return double_equal(distance(A, point) + distance(B, point), distance(A, B));
-}
-
-
 double dot(vec2 a, vec2 b) {
     return a.x * b.x + a.y * b.y;
 }
@@ -121,7 +99,7 @@ int Jarvis_algorithm(
         convex_vertices == NULL
         ||
         convex_size == NULL) {
-        return -1;
+            return -1;
     }
     int i;
     int min_index = 0;
