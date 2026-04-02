@@ -14,6 +14,7 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 ### Яндекс контесты
 ### 2 Cеместр
 
+[2026-04-02 8. Самостоятельная работа 1](https://contest.yandex.ru/contest/92743/problems/)\
 [2026-03-30 7. Абстрактная композиция по вертикали](https://contest.yandex.ru/contest/92698/problems/)\
 [2026-03-26 6. Пересечение отрезков на плоскости](https://contest.yandex.ru/contest/92581/problems/)\
 [2026-03-23 5. Выпуклое множество и внезапно стек](https://contest.yandex.ru/contest/92444/problems/)\
