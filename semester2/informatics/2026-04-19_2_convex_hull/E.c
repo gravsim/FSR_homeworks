@@ -167,19 +167,19 @@ int get_sector_area(
 }
 
 
-int get_right_down(vec2* hull, int hull_size) {
+int get_left_down(vec2* hull, int hull_size) {
     int i;
-    int right = 0;
+    int left = 0;
     for (i = 0 ; i < hull_size; i++) {
-        if (hull[i].x > hull[right].x
+        if (hull[i].x < hull[left].x
                 ||
-                (double_equal(hull[i].x, hull[right].x)
+                (double_equal(hull[i].x, hull[left].x)
                  &&
-                 hull[i].y < hull[right].y)){
-                    right = i;
+                 hull[i].y < hull[left].y)){
+                    left = i;
                  }
     }
-    return right;
+    return left;
 }
 
 
@@ -234,8 +234,8 @@ int sort_polygon(vec2* polygon, int polygon_size) {
     if (polygon == NULL) {
         return -1;
     }
-    int right_down = get_right_down(polygon, polygon_size);
-    swap_vec2(polygon, polygon + right_down);
+    int left_down = get_left_down(polygon, polygon_size);
+    swap_vec2(polygon, polygon + left_down);
     quick_sort(polygon + 1,
         polygon_size - 1,
         0,
