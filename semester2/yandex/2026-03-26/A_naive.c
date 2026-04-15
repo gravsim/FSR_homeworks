@@ -103,7 +103,8 @@ int get_intersection(Heap_node** segments, int i, int j, vec2* intersection) {
         return 0;
     }
     double t = ((x4 - x3) * (y1 - y3) - (x1 - x3) * (y4 - y3)) / denominator;
-    if (t >= 0 && t <= 1) {
+    double s = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
+    if (t >= 0 && t <= 1 && s >= 0 && s <= 1) {
         *intersection = (vec2){x1 + t * (x2 - x1), y1 + t * (y2 - y1)};
         return 1;
     }
@@ -172,7 +173,7 @@ int main(void) {
         segments[line_index][1].type = END;
     }
     for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
+        for (j = i + 1; j < n; j++) {
             check_intersection(
                 &intersections_amount
                 , intersections
@@ -193,22 +194,7 @@ int main(void) {
         , 0
         , intersections_amount - 1
         );
-    int final = 0;
-    int current = 0;
-    for (current = 0; current < intersections_amount; current++) {
-        if (current == 0
-            ||
-            intersections[current][0] != intersections[final-1][0]
-            ||
-            intersections[current][1] != intersections[final-1][1]
-            ) {
-            intersections[final][0] = intersections[current][0];
-            intersections[final][1] = intersections[current][1];
-            final++;
-        }
-    }
-
-    for (i = 0; i < final; i++) {
+    for (i = 0; i < intersections_amount; i++) {
         printf("%d %d\n", intersections[i][0] + 1, intersections[i][1] + 1);
     }
     for (i = 0; i < n; i++) {

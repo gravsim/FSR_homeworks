@@ -426,7 +426,8 @@ int get_intersection(Heap_node** segments, int i, int j, vec2* intersection) {
         return 0;
     }
     double t = ((x4 - x3) * (y1 - y3) - (x1 - x3) * (y4 - y3)) / denominator;
-    if (t >= 0 && t <= 1) {
+    double s = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
+    if (t >= 0 && t <= 1 && s >= 0 && s <= 1) {
         *intersection = (vec2){x1 + t * (x2 - x1), y1 + t * (y2 - y1)};
         return 1;
     }
@@ -609,10 +610,6 @@ int main(void) {
     for (i = 0; i < n; i++) {
         scanf("%d %lf %lf %lf %lf", &line_index, &Ax, &Ay, &Bx, &By);
         line_index--;
-        if (double_equal(Ax, Bx)) {
-            Ax -= 20 * EPSILON;
-            Bx += 20 * EPSILON;
-        }
         segments[line_index][0].line_index = line_index;
         segments[line_index][0].coords.x = Ax;
         segments[line_index][0].coords.y = Ay;
