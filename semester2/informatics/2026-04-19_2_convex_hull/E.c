@@ -89,19 +89,32 @@ int get_intersection(
 }
 
 
+int add_area(double* area, vec2* sector, int index1, int index2) {
+    *area += sector[index2].x * sector[index1].y
+                -
+                sector[index2].y * sector[index1].x;
+    return 1;
+}
+
+
 int get_sector_area(
     vec2* sector,
     vec2* polygon,
     int polygon_size,
     double sweeping_line_x,
     vec2* cut,
-    double* area
+    vec2* old_cut,
+    double* area,
+    int sector_index,
+    double left_border
     ) {
     if (sector == NULL
         ||
         polygon == NULL
         ||
         cut == NULL
+        ||
+        old_cut == NULL
         ||
         area == NULL
         ) {
@@ -113,14 +126,17 @@ int get_sector_area(
     int sector_size = 0;
     int intersections_amount = 0;
     *area = 0;
+    if (sector_index > 0) {
+        sector[sector_size++] = old_cut[0];
+    }
     for (i = 0; i < polygon_size; i++) {
         next = (i + 1) % polygon_size;
-        if (polygon[i].x < sweeping_line_x + EPSILON) {
+        if (polygon[i].x < sweeping_line_x + EPSILON
+            &&
+            polygon[i].x > left_border - EPSILON) {
             sector[sector_size++] = polygon[i];
             if (sector_size > 1) {
-                *area += sector[sector_size - 2].x * sector[sector_size - 1].y
-                -
-                sector[sector_size - 2].y * sector[sector_size - 1].x;
+                add_area(area, sector, sector_size - 1, sector_size - 2);
             }
         }
         if (intersections_amount < 2
@@ -133,16 +149,18 @@ int get_sector_area(
                 sector[sector_size++] = intersection;
                 cut[intersections_amount++] = intersection;
                 if (sector_size > 1) {
-                    *area += sector[sector_size - 2].x * sector[sector_size - 1].y
-                    -
-                    sector[sector_size - 2].y * sector[sector_size - 1].x;
+                    add_area(area, sector, sector_size - 1, sector_size - 2);
                 }
             }
     }
+    if (sector_index > 0) {
+        sector[sector_size++] = old_cut[1];
+        if (sector_size > 1) {
+            add_area(area, sector, sector_size - 1, sector_size - 2);
+        }
+    }
     if (sector_size > 2) {
-        *area += sector[sector_size - 1].x * sector[0].y
-        -
-        sector[sector_size - 1].y * sector[0].x;
+        add_area(area, sector, 0, sector_size - 1);
     }
     *area = fabs(*area) / 2;
     return 1;
@@ -243,25 +261,32 @@ int main(void) {
     double slice_area = total_area / jury_amount;
     double sweeping_line_x = 0;
     double left_x = get_left_x(polygon, polygon_size);
+    double left_border = left_x;
     double right_x = get_right_x(polygon, polygon_size);
     double right_x_save = right_x;
-    vec2* sector = calloc(polygon_size + 2, sizeof(vec2));
+    vec2* sector = calloc(polygon_size + 4, sizeof(vec2));
     vec2* cut = calloc(2, sizeof(vec2));
+    vec2* old_cut = calloc(2, sizeof(vec2));
     for (i = 0; i < jury_amount - 1; i++) {
-        while (fabs(local_area - slice_area * (i + 1)) > AREA_DIFFERENCE) {
+        while (fabs(local_area - slice_area) > AREA_DIFFERENCE) {
             sweeping_line_x = (left_x + right_x) / 2;
             get_sector_area(sector,
                 polygon,
                 polygon_size,
                 sweeping_line_x,
                 cut,
-                &local_area);
-            if (local_area > slice_area * (i + 1)) {
+                old_cut,
+                &local_area,
+                i,
+                left_border);
+            if (local_area > slice_area) {
                 right_x = sweeping_line_x;
             } else {
                 left_x = sweeping_line_x;
             }
         }
+        old_cut[0] = cut[0];
+        old_cut[1] = cut[1];
         printf("%.10E %.10E %.10E %.10E\n",
                 cut[0].x,
                 cut[0].y,
@@ -269,10 +294,12 @@ int main(void) {
                 cut[1].y);
         left_x = sweeping_line_x;
         right_x = right_x_save;
+        left_border = sweeping_line_x;
         local_area = 0;
     }
     free(polygon);
     free(sector);
     free(cut);
+    free(old_cut);
     return 0;
 }
