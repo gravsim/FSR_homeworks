@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-300
+#define EPSILON 1e-10
 
 
 typedef struct vec2 {
@@ -40,6 +40,10 @@ int get_centers(int polygon_size, vec2* inner_polygon, vec2* center1, vec2* cent
         center2 == NULL) {
             return -1;
     }
+    if (polygon_size > 0) {
+        *center1 = inner_polygon[0];
+        *center2 = inner_polygon[0];
+    }
     int i;
     int j;
     double max_distance = -1;
@@ -54,7 +58,6 @@ int get_centers(int polygon_size, vec2* inner_polygon, vec2* center1, vec2* cent
     }
     return 1;
 }
-
 
 
 int find_intersection(double* line1, double* line2, vec2* intersection) {
@@ -77,7 +80,6 @@ int build_inner_polygon(
     int polygon_size,
     vec2* polygon,
     vec2* inner_polygon,
-    int radius,
     double** lines,
     int* inner_polygon_size
     ) {
@@ -98,7 +100,8 @@ int build_inner_polygon(
                 &intersection)) {
                 k = 0;
                 while (k < polygon_size && inside) {
-                    if (lines[k][0] * intersection.x + lines[k][1] * intersection.y + lines[k][2] < 0) {
+                    if (lines[k][0] * intersection.x
+                        + lines[k][1] * intersection.y + lines[k][2] < -EPSILON) {
                         inside = 0;
                     }
                     k++;
@@ -139,7 +142,7 @@ int main(void) {
         lines[i][2] = C - radius * sqrt(A * A + B * B);
     }
     int inner_polygon_size = 0;
-    build_inner_polygon(polygon_size, polygon, inner_polygon, radius, lines, &inner_polygon_size);
+    build_inner_polygon(polygon_size, polygon, inner_polygon, lines, &inner_polygon_size);
     vec2 center1 = (vec2){0, 0};
     vec2 center2 = (vec2){0, 0};
     get_centers(inner_polygon_size, inner_polygon, &center1, &center2);
