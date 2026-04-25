@@ -155,7 +155,7 @@ int Jarvis_algorithm(
     (*convex_size)++;
 
     vec2 point1 = convex_vertices[0];
-    vec2 point2 = (vec2){point1.x, point1.y - 1.0};
+    vec2 point2 = (vec2){point1.x, point1.y + 1.0};
     current = get_max_cos_index(polygon, n, point2, point1);
     while (*convex_size < n && current != -1 && current != max_x_index) {
         convex_vertices[*convex_size] = polygon[current];
@@ -163,6 +163,10 @@ int Jarvis_algorithm(
         point1 = convex_vertices[*convex_size-2];
         point2 = convex_vertices[*convex_size-1];
         current = get_max_cos_index(polygon, n, point1, point2);
+    }
+    if (current == max_x_index) {
+        convex_vertices[*convex_size] = polygon[current];
+        (*convex_size)++;
     }
     return 1;
 }
@@ -176,33 +180,21 @@ int main(void) {
     int j = 0;
     scanf("%d", &cuts_amount);
     vec2* polygon = calloc(polygon_size, sizeof(vec2));
+    int points_amount = 0;
     for (i = 0; i < cuts_amount; i++) {
         scanf("%d", &cut_size);
         polygon_size += cut_size + 1;
-        polygon = realloc(polygon, polygon_size);
-        while (j < cut_size) {
-            scanf("%lf %lf", &polygon[j].x, &polygon[j].y);
-            j++;
+        polygon = realloc(polygon, polygon_size * sizeof(vec2));
+        for (j = 0; j <= cut_size; j++) {
+            scanf("%lf %lf", &polygon[points_amount].x, &polygon[points_amount].y);
+            points_amount++;
         }
     }
     vec2* convex_vertices = calloc(polygon_size, sizeof(vec2));
     int convex_size = 0;
-    int max_x_index = -1;
-    int min_y_index = -1;
+
     for (i = 0; i < polygon_size; i++) {
         polygon[i].x = fabs(polygon[i].x);
-    }
-    for (i = 0; i < polygon_size; i++) {
-        if (double_equal(polygon[i].x, 0)
-            &&
-            (min_y_index == -1 || polygon[i].y > polygon[min_y_index].y)) {
-                min_y_index = i;
-        }
-        if (double_equal(polygon[i].y, 0)
-            &&
-            (max_x_index == -1 || polygon[i].x > polygon[max_x_index].x)) {
-                max_x_index = i;
-            }
     }
     vec2* unique_polygon = calloc(polygon_size, sizeof(vec2));
     int unique_polygon_size = 0;
@@ -216,6 +208,20 @@ int main(void) {
             unique_polygon[unique_polygon_size++] = polygon[i];
         }
     }
+    int max_x_index = -1;
+    int min_y_index = -1;
+    for (i = 0; i < unique_polygon_size; i++) {
+        if (double_equal(unique_polygon[i].x, 0)
+            &&
+            (min_y_index == -1 || unique_polygon[i].y < unique_polygon[min_y_index].y)) {
+            min_y_index = i;
+            }
+        if (double_equal(unique_polygon[i].y, 0)
+            &&
+            (max_x_index == -1 || unique_polygon[i].x < unique_polygon[max_x_index].x)) {
+            max_x_index = i;
+            }
+    }
     Jarvis_algorithm(unique_polygon_size,
         unique_polygon,
         convex_vertices,
@@ -223,7 +229,6 @@ int main(void) {
         max_x_index,
         min_y_index
         );
-    int next;
     double A;
     double B;
     double C;
@@ -231,14 +236,13 @@ int main(void) {
     double y0;
     double max_area = 0;
     double area;
-    for (i = 0; i < convex_size; i++) {
-        next = (i + 1) % polygon_size;
-        A = convex_vertices[next].y - convex_vertices[i].y;
-        B = convex_vertices[i].x - convex_vertices[next].x;
+    for (i = 0; i < convex_size - 1; i++) {
+        A = convex_vertices[i + 1].y - convex_vertices[i].y;
+        B = convex_vertices[i].x - convex_vertices[i + 1].x;
         C = -A * convex_vertices[i].x - B * convex_vertices[i].y;
         x0 = -C / A;
         y0 = -C / B;
-        area = x0 * y0 / 2;
+        area = x0 * y0;
         if (area > max_area) {
             max_area = area;
         }
