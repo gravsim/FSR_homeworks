@@ -3,130 +3,6 @@
 #include <math.h>
 
 
-#define EPSILON 1e-10
-
-
-typedef struct vec2 {
-    double x;
-    double y;
-} vec2;
-
-
-int double_equal(double a, double b) {
-    return fabs(a - b) <= EPSILON;
-}
-
-
-double get_norm(vec2 vector) {
-    return sqrt(vector.x * vector.x + vector.y * vector.y);
-}
-
-
-vec2 subtract(vec2 vector1, vec2 vector2) {
-    return (vec2){vector1.x - vector2.x, vector1.y - vector2.y};
-}
-
-
-double distance(vec2 vector1, vec2 vector2) {
-    return get_norm(subtract(vector2, vector1));
-}
-
-
-int get_centers(int polygon_size, vec2* inner_polygon, vec2* center1, vec2* center2) {
-    if (inner_polygon == NULL
-        ||
-        center1 == NULL
-        ||
-        center2 == NULL) {
-            return -1;
-    }
-    if (polygon_size > 0) {
-        *center1 = inner_polygon[0];
-        *center2 = inner_polygon[0];
-    }
-    int i;
-    int j;
-    double max_distance = -1;
-    for (i = 0; i < polygon_size; i++) {
-        for (j = i + 1; j < polygon_size; j++) {
-            if (distance(inner_polygon[i], inner_polygon[j]) > max_distance) {
-                max_distance = distance(inner_polygon[i], inner_polygon[j]);
-                *center1 = inner_polygon[i];
-                *center2 = inner_polygon[j];
-            }
-        }
-    }
-    return 1;
-}
-
-
-int find_intersection(double* line1, double* line2, vec2* intersection) {
-    if (!line1 || !line2) {
-        return 0;
-    }
-    double determinant = line1[0] * line2[1] - line1[1] * line2[0];
-    if (double_equal(determinant, 0.0)) {
-        return 0;
-    }
-    double delta1 = line1[1] * line2[2] - line1[2] * line2[1];
-    double delta2 = line1[2] * line2[0] - line1[0] * line2[2];
-    intersection->x = delta1 / determinant;
-    intersection->y = delta2 / determinant;
-    return 1;
-}
-
-
-int build_inner_polygon(
-    int polygon_size,
-    vec2* polygon,
-    vec2* inner_polygon,
-    double** lines,
-    int* inner_polygon_size
-    ) {
-    if (polygon == NULL || inner_polygon == NULL) {
-        return -1;
-    }
-    int i;
-    int j;
-    int k;
-    int inside;
-    vec2 intersection;
-    for (i = 0; i < polygon_size; i++) {
-        for (j = i + 1; j < polygon_size; j++) {
-            inside = 1;
-            if (find_intersection(
-                lines[i],
-                lines[j],
-                &intersection)) {
-                k = 0;
-                while (k < polygon_size && inside) {
-                    if (lines[k][0] * intersection.x
-                        + lines[k][1] * intersection.y + lines[k][2] < -EPSILON) {
-                        inside = 0;
-                    }
-                    k++;
-                }
-                if (inside) {
-                    inner_polygon[(*inner_polygon_size)++] = intersection;
-                }
-            }
-        }
-    }
-    return 1;
-}
-
-
-int swap_int(int* a, int* b) {
-    if (!a || !b) {
-        return -1;
-    }
-    int tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
 typedef struct Heap_node {
     int value;
     int type;
@@ -242,29 +118,42 @@ int main(void) {
     int hours;
     int minutes;
     int seconds;
+    Heap* heap;
+    Heap_init(&heap);
+    int open_time;
+    int close_time;
     for (i = 0; i < registers_amount; i++) {
         scanf("%d %d %d", &hours, &minutes, &seconds);
-        openings[i] = hours * 3600 + minutes * 60 + seconds;
+        open_time = hours * 3600 + minutes * 60 + seconds;
+        Heap_push(heap, open_time, 0);
         scanf("%d %d %d", &hours, &minutes, &seconds);
-        closings[i] = hours * 3600 + minutes * 60 + seconds;
-        if (openings[i] >= closings[i]) {
-            closings[i] += 24 * 3600;
+        close_time = hours * 3600 + minutes * 60 + seconds;
+        if (open_time >= close_time) {
+            close_time += 24 * 3600;
+        }
+        Heap_push(heap, close_time, 1);
+        if (open_time > 0 && close_time < 24 * 3600) {
+            Heap_push(heap, open_time + 24 * 3600, 0);
+            Heap_push(heap, close_time + 24 * 3600, 1);
         }
     }
-    int max_time = -1;
-    int min_time = INT_MAX;
-    int working_tine;
-    int opened;
-    for (i = 0; i < registers_amount; i++) {
-        if (openings[i] > max_time) {
-            max_time = openings[i];
+    Heap_node event;
+    int opened = 0;
+    int old_time = 0;
+    int working_time = 0;
+    while (!Heap_is_empty(heap)) {
+        Heap_pop_minimum(heap, &event);
+        if (event.type == 0) {
+            opened++;
+        } else {
+            if (opened == registers_amount) {
+                working_time += event.value - old_time;
+            }
+            opened--;
         }
-        if (closings[i] < min_time) {
-            min_time = closings[i];
-        }
+        old_time = event.value;
     }
-
-    printf("%d", min_time - max_time);
+    printf("%d", working_time);
     free(openings);
     free(closings);
     return 0;
