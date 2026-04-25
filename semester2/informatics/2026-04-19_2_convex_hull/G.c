@@ -31,86 +31,138 @@ double distance(vec2 vector1, vec2 vector2) {
     return get_norm(subtract(vector2, vector1));
 }
 
-
-int get_centers(int polygon_size, vec2* inner_polygon, vec2* center1, vec2* center2) {
-    if (inner_polygon == NULL
-        ||
-        center1 == NULL
-        ||
-        center2 == NULL) {
-            return -1;
+vec2 normalize(vec2 vector) {
+    double norm = get_norm(vector);
+    if (double_equal(norm, 0.)) {
+        return vector;
     }
-    if (polygon_size > 0) {
-        *center1 = inner_polygon[0];
-        *center2 = inner_polygon[0];
-    }
-    int i;
-    int j;
-    double max_distance = -1;
-    for (i = 0; i < polygon_size; i++) {
-        for (j = i + 1; j < polygon_size; j++) {
-            if (distance(inner_polygon[i], inner_polygon[j]) > max_distance) {
-                max_distance = distance(inner_polygon[i], inner_polygon[j]);
-                *center1 = inner_polygon[i];
-                *center2 = inner_polygon[j];
-            }
-        }
-    }
-    return 1;
+    return (vec2){vector.x / norm, vector.y / norm};
 }
 
 
-int find_intersection(double* line1, double* line2, vec2* intersection) {
-    if (!line1 || !line2) {
-        return 0;
-    }
-    double determinant = line1[0] * line2[1] - line1[1] * line2[0];
-    if (double_equal(determinant, 0.0)) {
-        return 0;
-    }
-    double delta1 = line1[1] * line2[2] - line1[2] * line2[1];
-    double delta2 = line1[2] * line2[0] - line1[0] * line2[2];
-    intersection->x = delta1 / determinant;
-    intersection->y = delta2 / determinant;
-    return 1;
+double dot(vec2 a, vec2 b) {
+    return a.x * b.x + a.y * b.y;
 }
 
 
-int build_inner_polygon(
-    int polygon_size,
-    vec2* polygon,
-    vec2* inner_polygon,
-    double** lines,
-    int* inner_polygon_size
-    ) {
-    if (polygon == NULL || inner_polygon == NULL) {
+double get_cos(vec2 vector1, vec2 vector2) {
+    return dot(normalize(vector1), normalize(vector2));
+}
+
+
+int vec2_equal(vec2 vector1, vec2 vector2) {
+    return double_equal(vector1.x, vector2.x)
+           &&
+           double_equal(vector1.y, vector2.y);
+}
+
+
+int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2) {
+    if (vertices == NULL) {
         return -1;
     }
     int i;
-    int j;
-    int k;
-    int inside;
-    vec2 intersection;
-    for (i = 0; i < polygon_size; i++) {
-        for (j = i + 1; j < polygon_size; j++) {
-            inside = 1;
-            if (find_intersection(
-                lines[i],
-                lines[j],
-                &intersection)) {
-                k = 0;
-                while (k < polygon_size && inside) {
-                    if (lines[k][0] * intersection.x
-                        + lines[k][1] * intersection.y + lines[k][2] < -PRECISION) {
-                        inside = 0;
+    double max_cos = -2.;
+    int max_index = -1;
+    vec2 diff1 = subtract(point2, point1);
+    vec2 diff2;
+    double new_cos;
+    for (i = 0; i < vert_amount; i++) {
+        if (!vec2_equal(vertices[i], point2)) {
+            diff2 = subtract(vertices[i], point2);
+            new_cos = get_cos(diff1, diff2);
+            if (double_equal(max_cos, new_cos)) {
+                if (max_index == -1
+                    ||
+                    get_norm(diff2) > distance(point2, vertices[max_index])) {
+                        max_index = i;
                     }
-                    k++;
-                }
-                if (inside) {
-                    inner_polygon[(*inner_polygon_size)++] = intersection;
-                }
+            } else if (new_cos > max_cos + PRECISION) {
+                max_cos = new_cos;
+                max_index = i;
             }
         }
+    }
+    return max_index;
+}
+
+
+int swap_vec2(vec2* a, vec2* b) {
+    if (!a || !b) {
+        return -1;
+    }
+    vec2 tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 1;
+}
+
+
+int vec2_smaller(vec2 a, vec2 b) {
+    if (!double_equal(a.x, b.x)) {
+        return a.x < b.x;
+    }
+    if (!double_equal(a.y, b.y)) {
+        return a.y < b.y;
+    }
+    return 0;
+}
+
+
+void quick_sort(vec2* main_array, int size, int down, int up) {
+    if (down >= up) {
+        return;
+    }
+    vec2 pivot = main_array[(up + down) / 2];
+    int left = down;
+    int right = up;
+    while (left <= right) {
+        while (vec2_smaller(main_array[left], pivot)) {
+            left++;
+        }
+        while (vec2_smaller(pivot, main_array[right])) {
+            right--;
+        }
+        if (left <= right) {
+            swap_vec2(main_array + left, main_array + right);
+            left++;
+            right--;
+        }
+    }
+    quick_sort(main_array, size, down, right);
+    quick_sort(main_array, size, left, up);
+}
+
+
+int Jarvis_algorithm(
+    int n,
+    vec2* polygon,
+    vec2* convex_vertices,
+    int* convex_size,
+    int max_x_index,
+    int min_y_index
+    ) {
+    if (polygon == NULL
+        ||
+        convex_vertices == NULL
+        ||
+        convex_size == NULL) {
+            return -1;
+    }
+    int current;
+    *convex_size = 0;
+    convex_vertices[*convex_size] = polygon[min_y_index];
+    (*convex_size)++;
+
+    vec2 point1 = convex_vertices[0];
+    vec2 point2 = (vec2){point1.x, point1.y - 1.0};
+    current = get_max_cos_index(polygon, n, point2, point1);
+    while (*convex_size < n && current != -1 && current != max_x_index) {
+        convex_vertices[*convex_size] = polygon[current];
+        (*convex_size)++;
+        point1 = convex_vertices[*convex_size-2];
+        point2 = convex_vertices[*convex_size-1];
+        current = get_max_cos_index(polygon, n, point1, point2);
     }
     return 1;
 }
@@ -118,48 +170,82 @@ int build_inner_polygon(
 
 int main(void) {
     int cuts_amount;
-    int polygon_size;
+    int cut_size;
+    int polygon_size = 0;
     int i;
+    int j = 0;
     scanf("%d", &cuts_amount);
     vec2* polygon = calloc(polygon_size, sizeof(vec2));
-    for (i = 0; i < polygon_size; i++) {
-        scanf("%lf %lf", &polygon[i].x, &polygon[i].y);
+    for (i = 0; i < cuts_amount; i++) {
+        scanf("%d", &cut_size);
+        polygon_size += cut_size + 1;
+        polygon = realloc(polygon, polygon_size);
+        while (j < cut_size) {
+            scanf("%lf %lf", &polygon[j].x, &polygon[j].y);
+            j++;
+        }
     }
-    vec2* polygon = calloc(polygon_size, sizeof(vec2));
-    vec2* inner_polygon = calloc(polygon_size * polygon_size, sizeof(vec2));
-    double** lines = calloc(polygon_size, sizeof(double*));
+    vec2* convex_vertices = calloc(polygon_size, sizeof(vec2));
+    int convex_size = 0;
+    int max_x_index = -1;
+    int min_y_index = -1;
     for (i = 0; i < polygon_size; i++) {
-        scanf("%lf %lf", &polygon[i].x, &polygon[i].y);
-        lines[i] = calloc(3, sizeof(double));
+        polygon[i].x = fabs(polygon[i].x);
     }
+    for (i = 0; i < polygon_size; i++) {
+        if (double_equal(polygon[i].x, 0)
+            &&
+            (min_y_index == -1 || polygon[i].y > polygon[min_y_index].y)) {
+                min_y_index = i;
+        }
+        if (double_equal(polygon[i].y, 0)
+            &&
+            (max_x_index == -1 || polygon[i].x > polygon[max_x_index].x)) {
+                max_x_index = i;
+            }
+    }
+    vec2* unique_polygon = calloc(polygon_size, sizeof(vec2));
+    int unique_polygon_size = 0;
+    quick_sort(polygon,
+        polygon_size,
+        0,
+        polygon_size - 1);
+    unique_polygon[unique_polygon_size++] = polygon[0];
+    for (i = 1; i < polygon_size; i++) {
+        if (!vec2_equal(polygon[i - 1], polygon[i])) {
+            unique_polygon[unique_polygon_size++] = polygon[i];
+        }
+    }
+    Jarvis_algorithm(unique_polygon_size,
+        unique_polygon,
+        convex_vertices,
+        &convex_size,
+        max_x_index,
+        min_y_index
+        );
     int next;
     double A;
     double B;
     double C;
-    for (i = 0; i < polygon_size; i++) {
+    double x0;
+    double y0;
+    double max_area = 0;
+    double area;
+    for (i = 0; i < convex_size; i++) {
         next = (i + 1) % polygon_size;
-        A = polygon[next].y - polygon[i].y;
-        B = polygon[i].x - polygon[next].x;
-        C = -A * polygon[i].x - B * polygon[i].y;
-        lines[i][0] = A;
-        lines[i][1] = B;
-        lines[i][2] = C - radius * sqrt(A * A + B * B);
+        A = convex_vertices[next].y - convex_vertices[i].y;
+        B = convex_vertices[i].x - convex_vertices[next].x;
+        C = -A * convex_vertices[i].x - B * convex_vertices[i].y;
+        x0 = -C / A;
+        y0 = -C / B;
+        area = x0 * y0 / 2;
+        if (area > max_area) {
+            max_area = area;
+        }
     }
-    int inner_polygon_size = 0;
-    build_inner_polygon(polygon_size, polygon, inner_polygon, lines, &inner_polygon_size);
-    vec2 center1 = (vec2){0, 0};
-    vec2 center2 = (vec2){0, 0};
-    get_centers(inner_polygon_size, inner_polygon, &center1, &center2);
-    printf("%.4lf %.4lf %.4lf %.4lf\n",
-                center1.x,
-                center1.y,
-                center2.x,
-                center2.y);
+    printf("%lf ", max_area);
     free(polygon);
-    free(inner_polygon);
-    for (i = 0; i < polygon_size; i++) {
-        free(lines[i]);
-    }
-    free(lines);
+    free(convex_vertices);
+    free(unique_polygon);
     return 0;
 }
