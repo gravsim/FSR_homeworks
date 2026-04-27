@@ -36,7 +36,7 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 [2025-10-16 6. Списки](https://contest.yandex.ru/contest/83231/enter)\
 [2025-10-09 5. Матрицы](https://contest.yandex.ru/contest/82790/enter)\
 [2025-10-02 (Доп. задачи)](https://contest.yandex.ru/contest/82474/enter)\
-[2025-09-25 4. Динамич. память](https://contest.yandex.ru/contest/81896/enter)\
+[2025-09-25 4. Рекурсия и память](https://contest.yandex.ru/contest/81896/enter)\
 [2025-09-18 3. Векторы](https://contest.yandex.ru/contest/81582/enter)\
 [2025-09-11 2. Рекурсия](https://contest.yandex.ru/contest/81307/enter)\
 [2025-09-04 1. Операторы сравнения](https://contest.yandex.ru/contest/80760/enter)
