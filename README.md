@@ -14,8 +14,7 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 ### Яндекс контесты
 ### 2 Cеместр
 
-
-[2026-04-16 10. Поиск слов из словаря в тексте, Бор](https://contest.yandex.ru/contest/93662/problems/)\
+[2026-04-16 11. Поиск слов из словаря в тексте, Бор](https://contest.yandex.ru/contest/93662/problems/)\
 [2026-04-16 10. Расстояние Левенштейна](https://contest.yandex.ru/contest/93411/problems/)\
 [2026-04-13 9. Z и префикс функции](https://contest.yandex.ru/contest/93263/problems/)\
 [2026-04-02 8. Самостоятельная работа 1](https://contest.yandex.ru/contest/92743/problems/)\
