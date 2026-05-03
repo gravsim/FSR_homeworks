@@ -6,7 +6,7 @@ int main(void) {
     int max_length = 1000;
     int length = 0;
     char str[max_length];
-    while (scanf("%c", str + length) != EOF) {
+    while (scanf("%c", str + length) != EOF && str[length] != '\n') {
         length++;
     }
     int* answer = calloc(length, sizeof(int));
