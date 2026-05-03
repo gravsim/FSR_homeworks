@@ -65,11 +65,6 @@ int less_y(vec2* beginnings, int line1, int line2) {
     }
     double y1 = get_y(beginnings, line1);
     double y2 = get_y(beginnings, line2);
-    if (double_equal(y1, y2)) {
-        if (line1 < line2) {
-            return 1;
-        }
-    }
     return y1 < y2;
 }
 
@@ -250,10 +245,10 @@ int is_smaller(Heap_node a, Heap_node b) {
     if (a.position.x > b.position.x + PRECISION) {
         return 0;
     }
-    if (a.position.y < b.position.y - PRECISION) {
+    if (a.position.y > b.position.y - PRECISION) {
         return 1;
     }
-    if (a.position.y > b.position.y + PRECISION) {
+    if (a.position.y < b.position.y + PRECISION) {
         return 0;
     }
     if (a.type != b.type) {
@@ -364,6 +359,7 @@ int add_area(
             cross_matrix[index1][index2] = 1;
             cross_matrix[index2][index1] = 1;
             *area += height * width;
+            //printf("%d %d %lf \n", index1, index2, height * width);
         }
     }
     return 0;
@@ -391,6 +387,8 @@ int algorithm(
             case END:
                 low_neighbour = BST_low_neighbour(beginnings, *root_p, rectangle.index);
                 high_neighbour = BST_high_neighbour(beginnings, *root_p, rectangle.index);
+                //printf("%d %d \n", rectangle.index, low_neighbour);
+                //printf("%d %d \n", rectangle.index, high_neighbour);
                 add_area(
                     area,
                     cross_matrix,
@@ -398,6 +396,7 @@ int algorithm(
                     ends,
                     rectangle.index,
                     low_neighbour);
+
                 add_area(
                     area,
                     cross_matrix,
@@ -423,10 +422,8 @@ int main(void) {
     scanf("%d", &rectangles_amount);
     int index;
     int i;
-    double Ax;
-    double Ay;
-    double Bx;
-    double By;
+    double x;
+    double y;
     BST_node* root = NULL;
     Heap* heap;
     double area = 0;
@@ -440,17 +437,15 @@ int main(void) {
     double height;
     double width;
     for (index = 0; index < rectangles_amount; index++) {
-        scanf("%lf %lf %lf %lf", &Ay, &Ax, &height, &width);
-        Bx = Ax + width;
-        By = Ay + height;
+        scanf("%lf %lf %lf %lf", &x, &y, &width, &height);
         area += height * width;
-        beginnings[index].x = Ax;
-        beginnings[index].y = Ay;
+        beginnings[index].x = y;
+        beginnings[index].y = x;
 
-        ends[index].x = Bx;
-        ends[index].y = By;
-        Heap_push(heap, Ax, Ay, index, BEGINNING);
-        Heap_push(heap, Bx, By, index, END);
+        ends[index].x = y + height;
+        ends[index].y = x + width;
+        Heap_push(heap, beginnings[index].x, beginnings[index].y, index, BEGINNING);
+        Heap_push(heap, ends[index].x, ends[index].y, index, END);
     }
     algorithm(&area, cross_matrix, beginnings, ends, &heap, &root);
     printf("%lf\n", area * 0.0001);
