@@ -169,18 +169,6 @@ int BST_high_neighbour(
 }
 
 
-
-BST_node** BST_find_right_min(BST_node** node) {
-    if (!*node) {
-        return NULL;
-    }
-    while ((*node)->right) {
-        node = &(*node)->right;
-    }
-    return node;
-}
-
-
 BST_node** BST_search_node(
     Heap_node** segments,
     double sweeping_line_x,
@@ -224,32 +212,6 @@ int BST_delete_node(Heap_node** segments, double sweeping_line_x, BST_node** nod
     }
     tmp->line_index = (*descendant)->line_index;
     return BST_delete_node(segments, sweeping_line_x, descendant);
-}
-
-
-
-int BST_swap_nodes(
-    Heap_node** segments,
-    double sweeping_line_x,
-    BST_node** root_p,
-    int index1,
-    int index2
-    ) {
-
-    BST_node** node1 = BST_search_node(segments, sweeping_line_x, root_p, index1);
-    BST_node** node2 = BST_search_node(segments, sweeping_line_x, root_p, index2);
-    if (!node1 || !*node1 || !node2 || !*node2) {
-        return 0;
-    }
-    swap_int(&(*node1)->line_index, &(*node2)->line_index);
-    return 1;
-}
-
-
-int vec2_equal(vec2 vector1, vec2 vector2) {
-    return double_equal(vector1.x, vector2.x)
-        &&
-        double_equal(vector1.y, vector2.y);
 }
 
 
@@ -487,11 +449,11 @@ int check_intersection(
 
 int Bentley_Ottmann_algorithm(
     int** cross_matrix,
-    int* intersections_amount
-    , int** intersections
-    , Heap_node** segments
-    , Heap** heap
-    , BST_node** root_p
+    int* intersections_amount,
+    int** intersections,
+    Heap_node** segments,
+    Heap** heap,
+    BST_node** root_p
     ) {
     Heap_node point;
     double sweeping_line_x;
@@ -620,17 +582,6 @@ int Bentley_Ottmann_algorithm(
 }
 
 
-int swap_double(double* a, double* b) {
-    if (!a || !b) {
-        return -1;
-    }
-    double tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
 int main(void) {
     int segments_amount;
     scanf("%d", &segments_amount);
@@ -649,7 +600,6 @@ int main(void) {
     for (i = 0; i < segments_amount; i++) {
         cross_matrix[i] = calloc(segments_amount, sizeof(int));
     }
-
     for (i = 0; i < segments_amount * segments_amount; i++) {
         intersections[i] = calloc(2, sizeof(int));
     }
@@ -660,10 +610,6 @@ int main(void) {
     for (i = 0; i < segments_amount; i++) {
         scanf("%d %lf %lf %lf %lf", &line_index, &Ax, &Ay, &Bx, &By);
         line_index--;
-        if (Ax > Bx || (double_equal(Ax, Bx) && Ay > By)) {
-            swap_double(&Ax, &Bx);
-            swap_double(&Ay, &By);
-        }
         segments[line_index][0].line_index = line_index;
         segments[line_index][0].coords.x = Ax;
         segments[line_index][0].coords.y = Ay;
