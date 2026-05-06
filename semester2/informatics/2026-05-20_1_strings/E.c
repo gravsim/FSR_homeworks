@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 
-#define MAX_LENGTH 100001
+#define MAX_LENGTH 200001
 
 
 int prefix_function(char* string, int* pi, int length) {
@@ -25,7 +25,6 @@ int prefix_function(char* string, int* pi, int length) {
 int main(void) {
     int length = 0;
     char string[MAX_LENGTH];
-    int i;
     while (scanf("%c", string + length) != EOF && string[length] != '\n') {
         length++;
     }
@@ -33,20 +32,9 @@ int main(void) {
     while (scanf("%c", string + length) != EOF && string[length] != '\n') {
         length++;
     }
-    // for (i = 0; i < length; i++) {
-    //     printf("%c", string[i]);
-    // }
-    // printf("\n");
     int* answer = calloc(length, sizeof(int));
     prefix_function(string, answer, length);
-    int maximum = 0;
-    for (i = (length - 1) / 2; i < length; i++) {
-        // printf("%d ", answer[i]);
-        if (answer[i] > maximum) {
-            maximum = answer[i];
-        }
-    }
-    printf("%d ", (length - 1) / 2 - maximum);
+    printf("%d ", (length - 1) / 2 - answer[length - 1]);
     free(answer);
     return 0;
 }
