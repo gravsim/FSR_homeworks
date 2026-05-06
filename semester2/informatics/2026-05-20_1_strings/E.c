@@ -2,22 +2,16 @@
 #include <stdlib.h>
 
 
-int min_of_2(int a, int b) {
-    if (a < b) {
-        return a;
-    }
-    return b;
-}
+#define MAX_LENGTH 100001
+#define min_of_2(a, b) (a) < (b) ? (a) : (b)
+#define min_of_3(a, b, c) min_of_2((a), min_of_2((b), (c)));
 
 
-int min_of_3(int a, int b, int c) {
-    return min_of_2(a, min_of_2(b, c));
-}
-
-
-int get_Levenshtein_distance() {
+int get_Levenshtein_distance(char word1[], char word2[], int length1, int length2) {
     int i;
+    int j;
     int** matrix = calloc(length1 + 1, sizeof(int*));
+    int answer;
     for (i = 0; i <= length1; i++) {
         matrix[i] = calloc(length2 + 1, sizeof(int));
     }
@@ -36,24 +30,26 @@ int get_Levenshtein_distance() {
             }
         }
     }
-    return matrix[i - 1][j - 1];
+    answer = matrix[i - 1][j - 1];
+    for (i = 0; i <= length1; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+    return answer;
 }
 
 
 int main(void) {
-    int max_length = 1000;
     int length1 = 0;
     int length2 = 0;
-    char word1[max_length];
-    char word2[max_length];
-    int i;
-    int j;
+    char word1[MAX_LENGTH];
+    char word2[MAX_LENGTH];
     while (scanf("%c", word1 + length1) != EOF && word1[length1] != '\n') {
         length1++;
     }
     while (scanf("%c", word2 + length2) != EOF && word2[length2] != '\n') {
         length2++;
     }
-
+    printf("%d", get_Levenshtein_distance(word1, word2, length1, length2));
     return 0;
 }
