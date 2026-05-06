@@ -5,30 +5,18 @@
 #define MAX_LENGTH 100001
 
 
-int substring_equal(char* string1, char* string2, int len) {
-    if (string1 == NULL || string2 == NULL) {
-        return -1;
-    }
-    int i = 0;
-    while (i < len && string1[i] == string2[i]) {
-        i++;
-    }
-    if (i == len) {
-        return 1;
-    }
-    return 0;
-}
-
-
-int prefix_function(char* string, int* answer, int length) {
+int prefix_function(char* string, int* pi, int length) {
     int i;
-    int j;
+    int k;
     for (i = 1; i < length; i++) {
-        for (j = 1; j <= i; j++) {
-            if (substring_equal(string, string + i - j + 1, j)) {
-                answer[i] = j;
-            }
+        k = pi[i - 1];
+        while (k > 0 && string[k] != string[i]) {
+            k = pi[k - 1];
         }
+        if (string[k] == string[i]) {
+            k++;
+        }
+        pi[i] = k;
     }
     return 1;
 }
@@ -45,18 +33,18 @@ int main(void) {
     while (scanf("%c", string + length) != EOF && string[length] != '\n') {
         length++;
     }
-    for (i = 0; i < length; i++) {
-        printf("%c", string[i]);
-    }
-    printf("\n");
+    // for (i = 0; i < length; i++) {
+    //     printf("%c", string[i]);
+    // }
+    // printf("\n");
     int* answer = calloc(length, sizeof(int));
     prefix_function(string, answer, length);
     int maximum = 0;
-    for (i = 0; i < length; i++) {
+    for (i = (length - 1) / 2; i < length; i++) {
+        // printf("%d ", answer[i]);
         if (answer[i] > maximum) {
             maximum = answer[i];
         }
-
     }
     printf("%d ", (length - 1) / 2 - maximum);
     free(answer);

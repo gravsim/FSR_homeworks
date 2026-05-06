@@ -2,30 +2,18 @@
 #include <stdlib.h>
 
 
-int substring_equal(char* string1, char* string2, int len) {
-    if (string1 == NULL || string2 == NULL) {
-        return -1;
-    }
-    int i = 0;
-    while (i < len && string1[i] == string2[i]) {
-        i++;
-    }
-    if (i == len) {
-        return 1;
-    }
-    return 0;
-}
-
-
-int prefix_function_naive(char* string, int* answer, int length) {
+int prefix_function(char* string, int* pi, int length) {
     int i;
-    int j;
+    int k;
     for (i = 1; i < length; i++) {
-        for (j = 1; j <= i; j++) {
-            if (substring_equal(string, string + i - j + 1, j)) {
-                answer[i] = j;
-            }
+        k = pi[i - 1];
+        while (k > 0 && string[k] != string[i]) {
+            k = pi[k - 1];
         }
+        if (string[k] == string[i]) {
+            k++;
+        }
+        pi[i] = k;
     }
     return 1;
 }
