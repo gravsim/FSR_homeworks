@@ -3,53 +3,62 @@
 
 
 #define MAX_LENGTH 100001
-#define min_of_2(a, b) (a) < (b) ? (a) : (b)
-#define min_of_3(a, b, c) min_of_2((a), min_of_2((b), (c)));
 
 
-int get_Levenshtein_distance(char word1[], char word2[], int length1, int length2) {
+int substring_equal(char* string1, char* string2, int len) {
+    if (string1 == NULL || string2 == NULL) {
+        return -1;
+    }
+    int i = 0;
+    while (i < len && string1[i] == string2[i]) {
+        i++;
+    }
+    if (i == len) {
+        return 1;
+    }
+    return 0;
+}
+
+
+int prefix_function(char* string, int* answer, int length) {
     int i;
     int j;
-    int** matrix = calloc(length1 + 1, sizeof(int*));
-    int answer;
-    for (i = 0; i <= length1; i++) {
-        matrix[i] = calloc(length2 + 1, sizeof(int));
-    }
-    for (i = 0; i <= length1; i++) {
-        matrix[i][0] = i;
-    }
-    for (j = 0; j <= length2; j++) {
-        matrix[0][j] = j;
-    }
-    for (i = 1; i <= length1; i++) {
-        for (j = 1; j <= length2; j++) {
-            if (word1[i - 1] == word2[j - 1]) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = min_of_3(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + 1);
+    for (i = 1; i < length; i++) {
+        for (j = 1; j <= i; j++) {
+            if (substring_equal(string, string + i - j + 1, j)) {
+                answer[i] = j;
             }
         }
     }
-    answer = matrix[i - 1][j - 1];
-    for (i = 0; i <= length1; i++) {
-        free(matrix[i]);
-    }
-    free(matrix);
-    return answer;
+    return 1;
 }
 
 
 int main(void) {
-    int length1 = 0;
-    int length2 = 0;
-    char word1[MAX_LENGTH];
-    char word2[MAX_LENGTH];
-    while (scanf("%c", word1 + length1) != EOF && word1[length1] != '\n') {
-        length1++;
+    int length = 0;
+    char string[MAX_LENGTH];
+    int i;
+    while (scanf("%c", string + length) != EOF && string[length] != '\n') {
+        length++;
     }
-    while (scanf("%c", word2 + length2) != EOF && word2[length2] != '\n') {
-        length2++;
+    string[length++] = '`';
+    while (scanf("%c", string + length) != EOF && string[length] != '\n') {
+        length++;
     }
-    printf("%d", get_Levenshtein_distance(word1, word2, length1, length2));
+    for (i = 0; i < length; i++) {
+        printf("%c", string[i]);
+    }
+    printf("\n");
+    int* answer = calloc(length, sizeof(int));
+    prefix_function(string, answer, length);
+    int maximum = 0;
+    for (i = 0; i < length; i++) {
+        if (answer[i] > maximum) {
+            maximum = answer[i];
+        }
+
+    }
+    printf("%d ", (length - 1) / 2 - maximum);
+    free(answer);
     return 0;
 }

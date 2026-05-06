@@ -17,6 +17,20 @@ int substring_equal(char* string1, char* string2, int len) {
 }
 
 
+int prefix_function(char* string, int* answer, int length) {
+    int i;
+    int j;
+    for (i = 1; i < length; i++) {
+        for (j = 0; j <= i; j++) {
+            if (substring_equal(string, string + i - j + 1, j)) {
+                answer[i] = j;
+            }
+        }
+    }
+    return 1;
+}
+
+
 int main(void) {
     int max_length = 1000;
     int length = 0;
@@ -26,14 +40,7 @@ int main(void) {
     }
     int* answer = calloc(length, sizeof(int));
     int i = 0;
-    int j;
-    for (i = 1; i < length; i++) {
-        for (j = 0; j <= i; j++) {
-            if (substring_equal(str, str + i - j + 1, j)) {
-                answer[i] = j;
-            }
-        }
-    }
+    prefix_function(str, answer, length);
     for (i = 0; i < length; i++) {
         printf("%d ", answer[i]);
     }
