@@ -30,7 +30,7 @@ int get_index(char symbol) {
 }
 
 
-int get_char(int index) {
+char get_char(int index) {
     if (index >= 0 && index < 10) {
         return '0' + index;
     }
@@ -43,7 +43,7 @@ int get_char(int index) {
     if (index == 62) {
         return '_';
     }
-    return -1;
+    return ' ';
 }
 
 
@@ -56,7 +56,7 @@ TrieNode** Trie_search_node(TrieNode** current, char* word, int length) {
         i++;
     }
     if (i < length) {
-        return 0;
+        return NULL;
     }
     return current;
 }
@@ -71,7 +71,7 @@ int Trie_delete_node(TrieNode** node) {
 }
 
 
-TrieNode* Trie_new_node() {
+TrieNode* Trie_new_node(void) {
     TrieNode* new_node = malloc(sizeof(TrieNode));
     new_node->children = calloc(ALPHABET_SIZE, sizeof(TrieNode*));
     new_node->end_of_word = 0;
@@ -80,7 +80,7 @@ TrieNode* Trie_new_node() {
 
 
 TrieNode* Trie_push(TrieNode* root, char* word, int length) {
-    if (!root) {
+    if (root == NULL || word == NULL) {
         root = Trie_new_node();
     }
     TrieNode* current = root;
@@ -115,16 +115,29 @@ int Trie_free_node(TrieNode** node) {
 }
 
 
-int Trie_print(TrieNode** node) {
+int print_string(char* string, int length) {
+    if (string == NULL) {
+        return 0;
+    }
+    int i;
+    for (i = 0; i < length; i++) {
+        printf("%c", string[i]);
+    }
+    printf(" ");
+    return 1;
+}
+
+
+int Trie_print(TrieNode* node, char* sample, int length) {
+    if (node == NULL || sample == NULL) {
+        return 0;
+    }
     int i;
     for (i = 0; i < ALPHABET_SIZE; i++) {
-        if ((*node)->children[i]) {
-            printf("%c", get_char(i));
-            if ((*node)->children[i]->end_of_word) {
-                printf(" ");
-            } else {
-                Trie_print(&(*node)->children[i]);
-            }
+        if (node->children[i]) {
+            sample[length] = get_char(i);
+            print_string(sample, length + 1);
+            Trie_print(node->children[i], sample, length + 1);
         }
     }
     return 1;
@@ -132,10 +145,12 @@ int Trie_print(TrieNode** node) {
 
 
 int read_word(int* length, char* string) {
-    if (length == NULL) {
-        return -1;
+    if (length == NULL || string == NULL) {
+        return 0;
     }
     *length = 0;
+    scanf(" %c", string + *length);
+    (*length)++;
     while (scanf("%c", string + *length) != EOF && string[*length] != '\n') {
         (*length)++;
     }
@@ -149,12 +164,12 @@ int main(void) {
     int length = 0;
     char string[MAX_LENGTH];
     TrieNode** found;
+    char* sample = calloc(MAX_LENGTH, sizeof(char));
     do {
-        scanf("%d ", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
                 read_word(&length, string);
-
                 root = Trie_push(root, string, length);
                 printf("1\n");
                 break;
@@ -163,6 +178,8 @@ int main(void) {
                 found = Trie_search_node(&root, string, length);
                 if (found && *found) {
                     printf("%d\n", (*found)->end_of_word);
+                } else {
+                    printf("0\n");
                 }
                 break;
             case 3:
@@ -171,7 +188,8 @@ int main(void) {
                 printf("%d\n", Trie_delete_node(found));
                 break;
             case 4:
-                Trie_print(&root);
+                Trie_print(root, sample, 0);
+                printf("\n");
                 break;
             default:
                 break;
