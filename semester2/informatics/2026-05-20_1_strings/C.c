@@ -104,7 +104,7 @@ int print_string(char* string, int length) {
 }
 
 
-int Trie_print(TrieNode* node, char* sample, int length) {
+int Trie_print(TrieNode* node, char* sample, int length, int max_prefix, int added) {
     if (node == NULL || sample == NULL) {
         return 0;
     }
@@ -112,9 +112,10 @@ int Trie_print(TrieNode* node, char* sample, int length) {
     for (i = 0; i < ALPHABET_SIZE; i++) {
         if (node->children[i]) {
             sample[length] = get_char(i);
-            Trie_print(node->children[i], sample, length + 1);
-            if (node->children[i]->end_of_word) {
+            added = Trie_print(node->children[i], sample, length + 1, max_prefix, added);
+            if (node->children[i]->end_of_word && (length < max_prefix || added == 0)) {
                 print_string(sample, length + 1);
+                added++;
             }
         }
     }
@@ -150,7 +151,7 @@ int main(void) {
         read_word(&length, string);
         root = Trie_push(root, string, length);
     }
-    Trie_print(root, sample, 0);
+    Trie_print(root, sample, 0, max_prefix, 0);
     Trie_free_node(&root);
     return 0;
 }
