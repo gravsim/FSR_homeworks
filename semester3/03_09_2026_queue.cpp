@@ -18,6 +18,10 @@ struct Queue
 
 
 int push(Queue* queue, char value) {
+    if (queue->size == queue->max_size) {
+        std::cout << "Queue is full." << "\n";
+        return 1;
+    }
     Node* new_node = new Node;
     new_node->value = value;
     new_node->previous = nullptr;
@@ -45,6 +49,14 @@ int pop(Queue* queue, char* value) {
     return 0;
 }
 
+int top(Queue* queue, char* value) {
+    if (queue->start == nullptr) {
+        return -1;
+    }
+    *value = queue->start->value;
+    return 0;
+}
+
 
 bool is_empty(Queue* queue) {
     return queue->size == 0;
@@ -52,12 +64,12 @@ bool is_empty(Queue* queue) {
 
 
 void clear(Queue* queue, bool fill_zeros = false) {
-    Node* current = queue->end;
+    Node* current = queue->start;
     Node* previous;
     while (current) {
         previous = current->previous;
         if (fill_zeros) {
-            current->value = 0;
+            current->value = '0';
         } else {
             delete current;
         }
@@ -81,9 +93,12 @@ int main() {
     char value;
     int max_size;
     Queue* queue = new Queue;
-    std::cout << "Enter maximum size of queue: ";
+    std::cout << "Enter maximum size of queue (0 for unlimited): ";
     std::cin >> max_size;
-    init_queue(queue, max_size);
+    if (max_size == 0) {
+        init_queue(queue);
+    }
+        init_queue(queue, max_size);
     do {
         std::cin >> command;
         switch (command) {
@@ -95,7 +110,7 @@ int main() {
                 if (is_empty(queue)) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
-                    pop(queue, &value);
+                    top(queue, &value);
                     std::cout << value << "\n";
                 }
                 break;
@@ -103,16 +118,24 @@ int main() {
                 if (is_empty(queue)) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
-                    std::cout << "Queue is not empty" << "\n";
+                    pop(queue, &value);
+                    std::cout << value << "\n";
                 }
                 break;
             case 4:
-                std::cout << get_size(queue) << "\n";
+                if (is_empty(queue)) {
+                    std::cout << "Queue is empty" << "\n";
+                } else {
+                    std::cout << "Queue is not empty" << "\n";
+                }
                 break;
             case 5:
-                clear(queue);
+                std::cout << get_size(queue) << "\n";
                 break;
             case 6:
+                clear(queue);
+                break;
+            case 7:
                 clear(queue, true);
                 break;
             default:
