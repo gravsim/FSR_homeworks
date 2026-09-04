@@ -2,55 +2,55 @@
 #include <stdlib.h>
 
 
-struct Stack {
+typedef struct Stack {
     int size;
     int max_size;
     char* values;
-};
+} Stack;
 
 
-void expand(struct Stack* stack) {
+void expand(Stack* stack) {
     stack->max_size *= 2;
     stack->values = (char*)realloc(stack->values, stack->max_size * sizeof(char));
 }
 
 
-int push(struct Stack* stack, char* value) {
+int push(Stack* stack, char* value) {
     if (stack->size >= stack->max_size) {
         expand(stack);
     }
     stack->values[stack->size] = *value;
-    (stack->size)++;
+    stack->size++;
     return 0;
 }
 
 
-int pop(struct Stack* stack, char* value) {
-    *value = stack->values[(stack->size) - 1];
-    (stack->size)--;
+int pop(Stack* stack, char* value) {
+    *value = stack->values[stack->size - 1];
+    stack->size--;
     return 0;
 }
 
 
-int top(struct Stack* stack, char* value) {
+int top(Stack* stack, char* value) {
     *value = stack->values[stack->size - 1];
     return 0;
 }
 
 
-int is_empty(struct Stack* stack, int* value) {
+int is_empty(Stack* stack, int* value) {
     *value = !stack->size;
     return 0;
 }
 
 
-int clear(struct Stack* stack) {
+int clear(Stack* stack) {
     stack->size = 0;
     return 0;
 }
 
 
-int check_stack(struct Stack* stack) {
+int check_stack(Stack* stack) {
     int true_false;
     is_empty(stack, &true_false);
     if (true_false) {
@@ -64,7 +64,7 @@ int main(void) {
     int command;
     char value;
     int true_false;
-    struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
+    Stack* stack = malloc(sizeof(struct Stack));
     stack->size = 0;
     stack->max_size = 100;
     stack->values = (char*)calloc(stack->max_size, sizeof(char));
