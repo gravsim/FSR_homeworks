@@ -7,8 +7,8 @@
 
 struct Node
 {
-    char value;
-    Node* previous;
+    int value;
+    Node* next;
 };
 
 
@@ -21,7 +21,7 @@ struct Queue
 };
 
 
-void init_Queue(Queue& queue, int max_size = 100) {
+void init_Queue(Queue& queue, int max_size = -1) {
 	queue.size = 0;
 	queue.start = nullptr;
 	queue.end = nullptr;
@@ -29,35 +29,38 @@ void init_Queue(Queue& queue, int max_size = 100) {
 }
 
 
-int push(Queue& queue, char value) {
-    if (queue.size == queue.max_size) {
+int push(Queue& queue, int value) {
+    if (queue.max_size >= 0 && queue.size == queue.max_size) {
         std::cout << "Queue is full." << "\n";
         return QUEUE_FULL;
     }
     Node* new_node = new Node;
     new_node->value = value;
-    new_node->previous = nullptr;
+    new_node->next = nullptr;
     queue.size++;
     if (queue.end == nullptr) {
         queue.end = new_node;
         queue.start = new_node;
         return SUCCESS;
     }
-    queue.end->previous = new_node;
+    queue.end->next = new_node;
     queue.end = new_node;
     return SUCCESS;
 }
 
 
-int top(Queue& queue, char& value, bool do_pop = false) {
+int top(Queue& queue, int& value, bool do_pop = false) {
     if (queue.start == nullptr) {
         return ERROR;
     }
     value = queue.start->value;
     if (do_pop) {
-		Node* previous = queue.start->previous;
+		Node* next = queue.start->next;
+        if (next == nullptr) {
+            queue.end = nullptr;
+        }
 		delete queue.start;
-		queue.start = previous;
+		queue.start = next;
 		queue.size--;
     }
     return SUCCESS;
@@ -71,18 +74,19 @@ bool is_empty(Queue& queue) {
 
 void clear(Queue& queue, bool fill_zeros = false) {
     Node* current = queue.start;
-    Node* previous;
+    Node* next;
     while (current) {
-        previous = current->previous;
+        next = current->next;
         if (fill_zeros) {
-            current->value = '0';
+            current->value = 0;
         } else {
             delete current;
         }
-        current = previous;
+        current = next;
     }
     if (!fill_zeros) {
         queue.start = nullptr;
+        queue.end = nullptr;
         queue.size = 0;
     }
 }
@@ -94,63 +98,74 @@ int get_size(Queue& queue) {
 
 
 int main() {
-    int command;
-    char value;
+    int command = 0;
+    int value = 0;
     int max_size;
-    Queue *queue = new Queue;
-    std::cout << "Enter maximum size of queue (0 for unlimited): ";
+    Queue queue;
+    std::cout << "Enter maximum size of queue (<0 for unlimited): ";
     std::cin >> max_size;
-    if (max_size == 0) {
-        init_Queue(*queue);
+    if (max_size < 0) {
+        init_Queue(queue);
     } else {
-        init_Queue(*queue, max_size);
+        init_Queue(queue, max_size);
     }
+    // for (int i = 0; i < 100; i++) {
+    //     push(queue, i);
+    //     std::cout << "Value to push: " << i << "\n";
+    // }
+    // for (int i = 0; i < 100; i++) {
+    //     if (is_empty(queue)) {
+    //         std::cout << "Queue is empty" << "\n";
+    //     } else {
+    //         top(queue, value, true);
+    //         std::cout << "Popped value: " << value << "\n";
+    //     }
+    // }
     do {
         std::cin >> command;
         switch (command) {
             case 1:
                 std::cin >> value;
-                push(*queue, value);
+                push(queue, value);
                 break;
             case 2:
-                if (is_empty(*queue)) {
+                if (is_empty(queue)) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
-                    top(*queue, value);
+                    top(queue, value);
                     std::cout << "Top value: "  << value << "\n";
                 }
                 break;
             case 3:
-                if (is_empty(*queue)) {
+                if (is_empty(queue)) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
-                    top(*queue, value, true);
+                    top(queue, value, true);
                     std::cout << "Popped value: " << value << "\n";
                 }
                 break;
             case 4:
-                if (is_empty(*queue)) {
+                if (is_empty(queue)) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
                     std::cout << "Queue is not empty" << "\n";
                 }
                 break;
             case 5:
-                std::cout << "Queue size: " << get_size(*queue) << "\n";
+                std::cout << "Queue size: " << get_size(queue) << "\n";
                 break;
             case 6:
-                clear(*queue);
+                clear(queue);
                 std::cout << "Queue cleared." << "\n";
                 break;
             case 7:
-                clear(*queue, true);
+                clear(queue, true);
                 std::cout << "Queue filled with zeros." << "\n";
                 break;
             default:
                 break;
         }
     } while (command != 0);
-    clear(*queue);
-    delete queue;
+    clear(queue);
     return 0;
 }
