@@ -8,7 +8,7 @@
 struct Node
 {
     char value;
-    Node* previous;
+    Node* next;
 };
 
 
@@ -20,71 +20,97 @@ private:
     Node* start;
     Node* end;
 public:
-    Queue(int max_size = 100) {
-        size = 0;
-        start = nullptr;
-        end = nullptr;
-        this->max_size = max_size;
-    }
-    int push(char value) {
-        if (size == max_size) {
-            std::cout << "Queue is full." << "\n";
-            return QUEUE_FULL;
-        }
-        Node* new_node = new Node;
-        new_node->value = value;
-        new_node->previous = nullptr;
-        size++;
-        if (end == nullptr) {
-            end = new_node;
-            start = new_node;
-            return SUCCESS;
-        }
-        end->previous = new_node;
-        end = new_node;
-        return SUCCESS;
-    }
-
-    int top(char& value, bool do_pop = false) {
-        if (start == nullptr) {
-            return ERROR;
-        }
-        value = start->value;
-        if (do_pop) {
-            Node* previous = start->previous;
-            delete start;
-            start = previous;
-            size--;
-        }
-        return SUCCESS;
-    }
-
-    bool is_empty() {
-        return size == 0;
-    }
-
-    void clear(bool fill_zeros = false) {
-        Node* current = start;
-        Node* previous;
-        while (current) {
-            previous = current->previous;
-            if (fill_zeros) {
-                current->value = '0';
-            } else {
-                delete current;
-            }
-            current = previous;
-        }
-        if (!fill_zeros) {
-            start = nullptr;
-            size = 0;
-        }
-    }
-
-    int get_size() {
-        return size;
-    }
+    Queue();
+    Queue(int max_size);
+    int push(char value);
+    int top(char& value, bool do_pop);
+    bool is_empty();
+    void clear(bool fill_zeros);
+    int get_size();
 };
+
+
+Queue::Queue() {
+    size = 0;
+    start = nullptr;
+    end = nullptr;
+    this->max_size = -1;
+}
+
+
+Queue::Queue(int max_size) {
+    size = 0;
+    start = nullptr;
+    end = nullptr;
+    this->max_size = max_size;
+}
+
+
+int Queue::push(char value) {
+    if (size == max_size) {
+        std::cout << "Queue is full." << "\n";
+        return QUEUE_FULL;
+    }
+    Node* new_node = new Node;
+    new_node->value = value;
+    new_node->next = nullptr;
+    size++;
+    if (end == nullptr) {
+        end = new_node;
+        start = new_node;
+        return SUCCESS;
+    }
+    end->next = new_node;
+    end = new_node;
+    return SUCCESS;
+}
+
+
+int Queue::top(char& value, bool do_pop = false) {
+    if (start == nullptr) {
+        return ERROR;
+    }
+    value = start->value;
+    if (do_pop) {
+        Node* next = start->next;
+        if (next == nullptr) {
+            end = nullptr;
+        }
+        delete start;
+        start = next;
+        size--;
+    }
+    return SUCCESS;
+}
+
+
+bool Queue::is_empty() {
+    return size == 0;
+}
+
+
+void Queue::clear(bool fill_zeros = false) {
+    Node* current = start;
+    Node* next;
+    while (current) {
+        next = current->next;
+        if (fill_zeros) {
+            current->value = '0';
+        } else {
+            delete current;
+        }
+        current = next;
+    }
+    if (!fill_zeros) {
+        start = nullptr;
+        size = 0;
+    }
+}
+
+
+int Queue::get_size() {
+    return size;
+}
 
 
 int main() {
