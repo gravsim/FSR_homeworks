@@ -8,6 +8,7 @@
 class Queue
 {
 private:
+    bool extendable;
     int size;
     int max_size;
     int* values;
@@ -19,8 +20,8 @@ public:
     int norm_index(int index);
     bool is_full();
     void expand();
-    int push(char value);
-    int top(char& value, bool do_pop);
+    int push(int value);
+    int top(int& value, bool do_pop);
     bool is_empty();
     void clear(bool fill_zeros);
     int get_size();
@@ -28,82 +29,69 @@ public:
 
 
 Queue::Queue() {
-    values = new int[max_size];
+    extendable = true;
+    this->max_size = 1;
+    values = new int[1];
     size = 0;
     start = 0;
     end = 0;
-    this->max_size = -1;
 }
 
 
 Queue::Queue(int max_size) {
+    extendable = false;
+    this->max_size = max_size;
     values = new int[max_size];
     size = 0;
     start = 0;
     end = 0;
-    this->max_size = max_size;
 }
 
 
 int Queue::norm_index(int index) {
-    return (index % max_size + max_size) % max_size;
+    return index % max_size;
 }
 
 
 bool Queue::is_full() {
-    return end - start == max_size;
+    return size == max_size;
 }
 
 
 void Queue::expand() {
-    start = norm_index(start);
-    end = norm_index(end);
-    int old_capacity = max_size;
     max_size *= 2;
-    int* tmp_values = realloc(values, max_size * sizeof(int));
-    if (!tmp_values) {
-        return;
-    }
-    values = tmp_values;
+    int* new_values = new int[max_size];
     int i;
-    if (start >= end) {
-        for (i = 0; i < end; i++) {
-            values[i + old_capacity] = values[i];
-        }
-        end += old_capacity;
+    for (i = start; i < end; i++) {
+        new_values[i] = values[norm_index(i)];
     }
+    delete values;
+    values = new_values;
 }
 
 
-int Queue::push(char value) {
-    if (size == max_size) {
+int Queue::push(int value) {
+    if (!extendable && is_full()) {
         std::cout << "Queue is full." << "\n";
         return QUEUE_FULL;
     }
     if (is_full()) {
         expand();
     }
-    values[norm_index(queue, end)] = *value;
+    values[norm_index(end)] = value;
     end++;
+    size++;
     return 0;
 }
 
 
-int Queue::top(char& value, bool do_pop = false) {
-    if (start == nullptr) {
-        return ERROR;
-    }
-    value = start->value;
+int Queue::top(int& value, bool do_pop = false) {
+    value = values[norm_index(start)];
     if (do_pop) {
-        Node* next = start->next;
-        if (next == nullptr) {
-            end = nullptr;
-        }
-        delete start;
-        start = next;
+        start++;
         size--;
     }
-    return SUCCESS;
+    return 0;
 }
 
 
@@ -113,19 +101,13 @@ bool Queue::is_empty() {
 
 
 void Queue::clear(bool fill_zeros = false) {
-    Node* current = start;
-    Node* next;
-    while (current) {
-        next = current->next;
-        if (fill_zeros) {
-            current->value = '0';
-        } else {
-            delete current;
+    if (fill_zeros) {
+        for (int i = start; i < end; i++) {
+            values[norm_index(i)] = 0;
         }
-        current = next;
-    }
-    if (!fill_zeros) {
-        start = nullptr;
+    } else {
+        start = 0;
+        end = 0;
         size = 0;
     }
 }
@@ -138,7 +120,7 @@ int Queue::get_size() {
 
 int main() {
     int command;
-    char value;
+    int value;
     int max_size;
     Queue* queue;
     std::cout << "Enter maximum size of queue (0 for unlimited): ";
@@ -153,47 +135,47 @@ int main() {
         switch (command) {
             case 1:
                 std::cin >> value;
-                push(value);
+                queue->push(value);
                 break;
             case 2:
-                if (is_empty()) {
+                if (queue->is_empty()) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
-                    top(value);
+                    queue->top(value);
                     std::cout << "Top value: "  << value << "\n";
                 }
                 break;
             case 3:
-                if (is_empty()) {
+                if (queue->is_empty()) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
-                    top(value, true);
+                    queue->top(value, true);
                     std::cout << "Popped value: " << value << "\n";
                 }
                 break;
             case 4:
-                if (is_empty()) {
+                if (queue->is_empty()) {
                     std::cout << "Queue is empty" << "\n";
                 } else {
                     std::cout << "Queue is not empty" << "\n";
                 }
                 break;
             case 5:
-                std::cout << "Queue size: " << get_size() << "\n";
+                std::cout << "Queue size: " << queue->get_size() << "\n";
                 break;
             case 6:
-                clear();
+                queue->clear();
                 std::cout << "Queue cleared." << "\n";
                 break;
             case 7:
-                clear(true);
+                queue->clear(true);
                 std::cout << "Queue filled with zeros." << "\n";
                 break;
             default:
                 break;
         }
     } while (command != 0);
-    clear();
+    queue->clear();
     delete queue;
     return 0;
 }

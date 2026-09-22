@@ -15,6 +15,7 @@ struct Node
 class Queue
 {
 private:
+    bool extendable = false;
     int size;
     int max_size;
     Node* start;
@@ -23,8 +24,8 @@ public:
     Queue();
     Queue(int max_size);
     bool is_full();
-    int push(char value);
-    int top(char& value, bool do_pop);
+    int push(int value);
+    int top(int& value, bool do_pop);
     bool is_empty();
     void clear(bool fill_zeros);
     int get_size();
@@ -32,6 +33,7 @@ public:
 
 
 Queue::Queue() {
+    extendable = true;
     size = 0;
     start = nullptr;
     end = nullptr;
@@ -40,6 +42,7 @@ Queue::Queue() {
 
 
 Queue::Queue(int max_size) {
+    extendable = true;
     size = 0;
     start = nullptr;
     end = nullptr;
@@ -47,14 +50,13 @@ Queue::Queue(int max_size) {
 }
 
 
-
 bool Queue::is_full() {
     return size == max_size;
 }
 
 
-int Queue::push(char value) {
-    if (is_full()) {
+int Queue::push(int value) {
+    if (!extendable && is_full()) {
         std::cout << "Queue is full." << "\n";
         return QUEUE_FULL;
     }
@@ -73,7 +75,7 @@ int Queue::push(char value) {
 }
 
 
-int Queue::top(char& value, bool do_pop = false) {
+int Queue::top(int& value, bool do_pop = false) {
     if (start == nullptr) {
         return ERROR;
     }
@@ -122,7 +124,7 @@ int Queue::get_size() {
 
 int main() {
     int command;
-    char value;
+    int value;
     int max_size;
     Queue* queue;
     std::cout << "Enter maximum size of queue (0 for unlimited): ";
