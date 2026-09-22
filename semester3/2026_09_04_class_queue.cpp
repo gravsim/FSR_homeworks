@@ -7,7 +7,7 @@
 
 struct Node
 {
-    char value;
+    int value;
     Node* next;
 };
 
@@ -15,7 +15,7 @@ struct Node
 class Queue
 {
 private:
-    bool extendable = false;
+    bool extendable;
     int size;
     int max_size;
     Node* start;
@@ -42,7 +42,7 @@ Queue::Queue() {
 
 
 Queue::Queue(int max_size) {
-    extendable = true;
+    extendable = false;
     size = 0;
     start = nullptr;
     end = nullptr;
