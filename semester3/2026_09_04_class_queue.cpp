@@ -22,6 +22,7 @@ private:
 public:
     Queue();
     Queue(int max_size);
+    bool is_full();
     int push(char value);
     int top(char& value, bool do_pop);
     bool is_empty();
@@ -46,8 +47,14 @@ Queue::Queue(int max_size) {
 }
 
 
+
+bool Queue::is_full() {
+    return size == max_size;
+}
+
+
 int Queue::push(char value) {
-    if (size == max_size) {
+    if (is_full()) {
         std::cout << "Queue is full." << "\n";
         return QUEUE_FULL;
     }
